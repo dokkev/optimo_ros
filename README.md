@@ -14,6 +14,12 @@ Collection of ROS2 packages for the Optimo Robot.
 - `optimo_sim`: For running the Optimo in Gazebo.
 
 
+## Turn on the robot (only applied to AHG Optimo)
+On Arduino
+<r,s,0> - Turn on the robot
+<r,s,1> - Turn off the robot
+
+
 ### Launching
 
 To view and play around with the model (URDF) in Rviz, run the following:
@@ -48,11 +54,6 @@ ros2 service call /optimo/optimo_hw_iface_server/toggle_enable std_srvs/srv/SetB
 
 To disable the robot, set data to false.
 
-
-## Turn on the robot (only applied to AHG Optimo)
-On Arduino
-<r,s,0> - Turn on the robot
-<r,s,1> - Turn off the robot
 
 ## Teleoperation
 
