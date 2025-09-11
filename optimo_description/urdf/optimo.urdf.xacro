@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- Full URDF for the Optimo arm, including controls -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="optimo">
+    <xacro:arg name="use_gripper" default="true" />
+    <xacro:arg name="use_sim_hardware" default="false" />
+    <xacro:arg name="prefix" default=""/>
+    <xacro:arg name="robot_index" default="0"/>
+    <xacro:arg name="ns" default="optimo"/>
+    <!-- Import files -->
+    <xacro:include filename="$(find optimo_description)/urdf/optimo.common.xacro" />
+    <xacro:include filename="$(find optimo_description)/urdf/optimo.xacro" />
+    <xacro:include filename="$(find optimo_description)/urdf/optimo.ros2_control.xacro" />
+
+    <link name="world"/>
+
+    <!-- Actually add the arm, and ros2 control -->
+    <xacro:optimo use_gripper="$(arg use_gripper)" prefix="$(arg prefix)"/>
+    <xacro:optimo_ros2_control use_gripper="$(arg use_gripper)" use_sim_hardware="$(arg use_sim_hardware)" prefix="$(arg prefix)" robot_index="$(arg robot_index)" ns="$(arg ns)" />
+
+</robot>

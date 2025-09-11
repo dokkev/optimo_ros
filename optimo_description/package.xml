@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="3">
+  <name>optimo_description</name>
+  <version>0.0.14</version>
+  <description>This package encompasses the specifications of Optimo and their corresponding end effectors, detailing their kinematic model, joint limitations, and visual/collision meshes through URDF. The collision meshes are a simplified representation of the visual meshes, for the efficiency of collision detection.</description>
+  <maintainer email="support@roboligent.com">Roboligent</maintainer>
+  <license>Apache 2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>urdf_launch</exec_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

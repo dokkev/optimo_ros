@@ -1,0 +1,12 @@
+<library path="optimo_hardware">
+  <class name="optimo_hardware/OptimoHardwareInterface" type="optimo_ros::OptimoHardwareInterface" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Robot hardware plugin for Optimo. 
+    </description>
+  </class>
+  <class name="optimo_hardware/GripperHardwareInterface" type="optimo_ros::GripperHardwareInterface" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Robot hardware plugin for the parallel gripper.
+    </description>
+  </class>
+</library>

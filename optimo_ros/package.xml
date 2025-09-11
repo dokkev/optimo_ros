@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="3">
+  <name>optimo_ros</name>
+  <version>0.0.14</version>
+  <description>Meta Package for Optimo ROS</description>
+  <maintainer email="support@roboligent.com">Roboligent</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>optimo_quick_start_app</depend>
+  <depend>optimo_msgs</depend>
+  <depend>optimo_api</depend>
+  <depend>optimo_sim</depend>
+  <depend>optimo_hardware</depend>
+  <depend>optimo_description</depend>
+  <depend>optimo_moveit_config</depend>
+  <depend>optimo_controllers</depend>
+  <depend>optimo_bringup</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,7 @@
+<library path="optimo_controllers">
+    <class name="optimo_controllers/OptimoEffortController" type="optimo_ros::OptimoEffortController" base_class_type="controller_interface::ControllerInterface">
+        <description>
+            Uses CallbackCommander and model to produce various effort (torque) commands
+        </description>
+    </class>
+</library>

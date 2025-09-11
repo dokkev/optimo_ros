@@ -1,0 +1,4 @@
+int32 duration
+float64[] pos
+---
+bool success

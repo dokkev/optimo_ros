@@ -1,0 +1,3 @@
+float64 impedance
+float64 max_force
+float64 stop_sensitivity

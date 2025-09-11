@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="3">
+  <name>optimo_sim</name>
+  <version>0.0.14</version>
+  <description>This package contains all the ROS components needed for running the Optimo robot in a Gazebo simulation.</description>
+  <maintainer email="support@roboligent.com">Roboligent</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ros_gz</build_depend>
+  <depend>ros_ign_bridge</depend>
+  <build_depend>ign_ros2_control</build_depend>
+  <exec_depend>ros2_control</exec_depend>
+  <exec_depend>ros2_controllers</exec_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

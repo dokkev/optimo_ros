@@ -1,0 +1,5 @@
+int32 duration
+string topic_name
+bool cartesian # joint if false, cartesian if true
+---
+bool success

@@ -1,0 +1,312 @@
+# O70001.yml
+global:
+    name: ld_7dof # *_Ndof format required
+    # include: O7R0001_sea.yml
+    # include: O7R0001_safety.yml
+    num_joints: 7 # 7 if no EE, 8 if EE
+    num_groups: 1 # 1 if no EE, 2 if EE
+    ground_acceleration: 0, 0, 9.8 #0.171, 0, 9.8015  # x, y, z: Refers to the coordinate system of robot
+    home: 0.360, 0.110, -0.041, 0.00, 0.0, -1, -1.3 # end effector position (x,y,z), orientation (x,y,z), rotation [rad]
+    tool_center_point: .0, 0, 0.27 # location of attachment point
+
+# sea.yaml
+J1:
+  spr_enc_offset: 0
+  spr_mech_gear_ratio:  24.0
+  spr_const:    16231.0 #mNm/deg
+  hdrive_ratio: 80
+  kp: 31.0
+  kd: 0.30
+  na: 1.0
+  ned: 0.143
+  ndb: 0.027
+  cf: 1.0
+  k:  0.001
+  dmp_cmp:   0.0010
+  trq_ref_lim: 79000
+  trq_err_lim: 30000
+
+J2:
+  spr_enc_offset: 0
+  spr_mech_gear_ratio:  23.15
+  spr_const:    16214.0 #mNm/deg
+  hdrive_ratio: 100
+  kp: 31.0
+  kd: 0.30
+  na: 1.0
+  ned: 0.143
+  ndb: 0.027
+  cf: 1.2
+  k:  0.001
+  dmp_cmp:   0.0015
+  trq_ref_lim: 95000
+  trq_err_lim: 30000
+  
+J3:
+  spr_enc_offset: 0
+  spr_mech_gear_ratio:  18.40
+  spr_const:    8692.0 #mNm/deg
+  hdrive_ratio: 120
+  kp: 15.0
+  kd: 0.15
+  na: 1.0
+  ned: 0.143
+  ndb: 0.027
+  cf: 1.0
+  k:  0.0001
+  dmp_cmp:   0.0001
+  trq_ref_lim: 32000
+  trq_err_lim: 12000
+  
+J4:
+  spr_enc_offset: 0
+  spr_mech_gear_ratio:  18.22
+  spr_const:    8587.0 #mNm/deg
+  hdrive_ratio: 160
+  kp: 15.0 #23
+  kd: 0.15 #0.20
+  na: 1.0
+  ned: 0.220
+  ndb: 0.027
+  cf: 1.0
+  k:  0.0001
+  dmp_cmp:   0.0040
+  trq_ref_lim: 40000
+  trq_err_lim: 12000
+  
+J5:
+  spr_enc_offset: 0
+  spr_mech_gear_ratio: 15.430
+  spr_const: 4808.0
+  hdrive_ratio: 120
+  kp: 40.0 #35.0
+  kd: 0.40 #30.0
+  na: 1.0 #20
+  ned: 0.220 #20
+  ndb: 0.027
+  cf: 2.0
+  k:  0.0001
+  dmp_cmp:   0.0015
+  trq_ref_lim: 15000
+  trq_err_lim: 5000
+  
+J6:
+  spr_enc_offset: 0
+  spr_mech_gear_ratio: 15.710
+  spr_const: 4887.0
+  hdrive_ratio: 120
+  kp: 40 #50.0 #35.0
+  kd: 0.45 #30.0
+  na: 1.0 #20
+  ned: 0.23 #20
+  ndb: 0.027
+  cf: 2.0
+  k:  0.0001
+  dmp_cmp:   0.0015
+  trq_ref_lim: 15000
+  trq_err_lim: 5000
+
+J7:
+  spr_enc_offset: 0
+  spr_mech_gear_ratio:  15.410
+  spr_const:    4887.0 #mNm/deg
+  hdrive_ratio: 120
+  kp: 40.0 #prev: 50.0
+  kd: 0.35 #prev: 0.45
+  na: 1.00 #30 prev: 0.02
+  ned: 0.250 #30 prev: 0.220
+  ndb: 0.027
+  cf: 2.0
+  k:  0.0001
+  dmp_cmp:   0.0015
+  trq_ref_lim: 15000
+  trq_err_lim: 5000
+
+# safety.yaml
+
+global:
+  power_limit: null
+  momentum_limit: null
+  path_deviation_limit: null    
+
+J1:
+  max_torque: 79000           # mNm
+  max_speed:  100             # deg/s
+  angle_upper_limit: 125.0     # deg
+  angle_lower_limit: -125.0    # deg
+  calibration:
+      calibration_direction: 1
+      calibration_angle:     79.24    # deg
+  
+J2:
+  max_torque: 95000
+  max_speed: 100
+  angle_upper_limit: 200.0
+  angle_lower_limit: 60.0
+  calibration:
+    calibration_direction: 1
+    calibration_angle:     57.229
+  
+J3:
+  max_torque: 32000
+  max_speed: 150
+  angle_upper_limit: 125.0
+  angle_lower_limit: -125.0
+  calibration:
+      calibration_direction: -1
+      calibration_angle:     7.65
+
+J4:
+  max_torque: 40000
+  max_speed: 150
+  angle_upper_limit: 10.0
+  angle_lower_limit: -145.0
+  calibration:
+      calibration_direction: null
+      calibration_angle:     null
+
+J5:
+  max_torque: 15000
+  max_speed: 180
+  angle_upper_limit: 155.0
+  angle_lower_limit: -155.0
+  calibration:
+      calibration_direction: null
+      calibration_angle:     null
+  
+J6:
+  max_torque: 15000
+  max_speed: 180
+  angle_upper_limit: 120.0
+  angle_lower_limit: -120.0
+  calibration:
+      calibration_direction: null
+      calibration_angle:     null
+
+J7:
+  max_torque: 15000
+  max_speed: 180
+  angle_upper_limit: 125.0
+  angle_lower_limit: -125.0
+  calibration:
+      calibration_direction: null
+      calibration_angle:     null
+
+Joint1:
+    group_id: right_arm
+    joint_id: j1
+    config:
+        linkage_pos_offset: -1536.5 #-1457.06 #-1434.74
+        torque_offset:      0    # mNm
+        direction:          1    # [-1 | 1]            
+        home_angle:         0    # deg
+    link:
+      link_mass: 4.152            # in Kg 4.152 w/covers
+      l_com: 0, -0.01635, 0.01549 # in meter (x, y, z) (adjust for gravity balance)
+      lI: 0.010001, 0.000017, -0.000010, 0.000017, 0.007494, 0.000213, -0.000010, 0.000213, 0.009939  # in Kg.m^2, I11, I12, I13, I21, I22 ...
+    DHparameters:
+        DH_a:  0    # meter
+        DH_r:  0    # meter
+        DH_ap: 90   # degree
+        
+Joint2:
+    group_id: right_arm
+    joint_id: j2
+    config:
+        linkage_pos_offset: 1500.0 #1503.6 #1323.6 + 180
+        torque_offset:      0
+        direction:          1
+        home_angle:         0
+    link:
+      link_mass: 1.720                  # Kg 1.678 w/covers 
+      l_com: 0.0, -0.050630 , 0.056770  # (adjust for gravity balance)
+      lI: 0.005694, 0.000000, 0.000000, 0.000000, 0.005902, 0.001353, 0.000000, 0.001353, 0.002415
+    DHparameters:
+        DH_a:  0
+        DH_r:  0
+        DH_ap: 90
+        
+Joint3:
+    group_id: right_arm
+    joint_id: j3
+    config:
+        linkage_pos_offset: -1368.0  #-1371.5 #-1368.63 #-1365.63
+        torque_offset:     0
+        direction:          1
+        home_angle:         0
+    link:
+      link_mass: 4.310                 # Kg 4.204 w/covers
+      l_com: -0.000039, 0.098, -0.0  # m -.2  (adjust for gravity balance)
+      lI: 0.012989, -0.000015, -0.000003, -0.000015, 0.002584, 0.000632, -0.000003, 0.000632, 0.013050
+    DHparameters:
+      DH_a:  0.0    # m
+      DH_r:  0.4    # m
+      DH_ap: -90     # deg
+      
+Joint4:
+    group_id: right_arm
+    joint_id: j4
+    config:
+        linkage_pos_offset: -617.50 #-670.45
+        torque_offset:      0
+        direction:          1
+        home_angle:         0
+    link:
+      link_mass: 1.090                # Kg 1.09 w/covers
+      l_com: -0.000010, 0.048852, 0.068800  # y=0.05989  (adjust for gravity balance) z = 0.068800
+      lI: 0.004297, 0,0, 0,  0.004366,-0.000804, 0, -0.000804,0.003346 # Kg.m^2  
+    DHparameters:
+      DH_a:  0      # m .432
+      DH_r:  0  # m
+      DH_ap: 90    # deg
+      
+Joint5:
+    group_id: right_arm
+    joint_id: j5
+    config:
+        linkage_pos_offset: -965.72
+        torque_offset:     0
+        direction:          1
+        home_angle:         0
+    link:
+      link_mass: 2.230                # Kg  1.748 w/covers
+      l_com: 0.001262, 0.085, 0.008  # m -.2
+      lI: 0.005744, -0.000211,  -0.000027, -0.000211, 0.001842, -0.001278, -0.000027, -0.001278, 0.005457 # Kg.m^2
+    DHparameters:
+      DH_a:  0.0  # m .432
+      DH_r:  0.4  # m
+      DH_ap: -90  # deg
+      
+Joint6:
+    group_id: right_arm
+    joint_id: j6
+    config:
+        linkage_pos_offset: 1384.7 #1385.70 #1385.35
+        torque_offset:      0
+        direction:          1
+        home_angle:         0
+    link:
+      link_mass: 1.138      # Kg 1.138 w/covers
+      l_com: 0.000, -0.000070, 0.010855 # m 0.010855 
+      lI: 0.00063, 0,0,0, 0.000629, 0, 0, 0, 0.000546 # Kg.m^2  
+    DHparameters:
+      DH_a:  0        # m
+      DH_r:  0.0      # m
+      DH_ap: 90        # deg
+
+Joint7:
+    group_id: right_arm
+    joint_id: j7
+    config:
+        linkage_pos_offset: -3185.85 # -3162.22
+        torque_offset:      0
+        direction:          1
+        home_angle:         0
+    link:
+      link_mass: .88      # Change to match xacro file in use
+      l_com: 0, -0.00, 0.1   # m -.2
+      lI: 0.005541, 0.000045, 0.000077, 0.000045, 0.004779, 0.000043, 0.000077, 0.000043, 0.001723 # Kg.m^2  
+    DHparameters:
+      DH_a:  0        # m
+      DH_r:  0.0      # m
+      DH_ap: 0        # deg

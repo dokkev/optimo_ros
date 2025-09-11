@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  #We avoid defining this to get this from topic, as we need the xacro substitutitons to be correct. Will cause some warnings.
+  urdf:
+    package: optimo_description
+    relative_path: urdf/optimo.urdf.xacro
+  srdf:
+    relative_path: config/optimo.srdf
+  package_settings:
+    author_name: Roboligent
+    author_email: info@roboligent.com
+    generated_timestamp: 1698850095

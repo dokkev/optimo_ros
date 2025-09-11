@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package format="3">
+  <name>optimo_controllers</name>
+  <version>0.0.14</version>
+  <description>ROS control controllers.</description>
+  <maintainer email="support@roboligent.com">Roboligent</maintainer>
+  <license>Apache 2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>optimo_msgs</depend>
+  <depend>optimo_api</depend>
+  <depend>std_msgs</depend>
+
+  <depend>controller_interface</depend>
+  <depend>realtime_tools</depend>
+  <depend>pluginlib</depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

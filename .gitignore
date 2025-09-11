@@ -1,0 +1,17 @@
+
+optimo_api/include/optimo_api/Resource.h
+
+# Ignore all resources in optimo_api
+optimo_api/resources/
+
+# Ignore only CMakeLists.txt in optimo_api
+optimo_api/CMakeLists.txt
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

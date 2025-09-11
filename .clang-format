@@ -1,0 +1,47 @@
+Language: Cpp
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: 1
+BasedOnStyle: Google
+AccessModifierOffset: -2
+AlignAfterOpenBracket: AlwaysBreak
+BraceWrapping:
+  AfterClass: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterEnum: true
+BreakBeforeBraces: Custom
+ColumnLimit: 100
+ConstructorInitializerIndentWidth: 0
+ContinuationIndentWidth: 2
+DerivePointerAlignment: false
+PointerAlignment: Middle
+ReflowComments: true
+IncludeBlocks: Regroup
+# Qt headers internally are not sorted correctly.
+# Internally Qt places C++ headers before C headers?
+# So Qt headers are considered "C system headers" by cpplint.
+# This is why they are placed above C++ headers.
+IncludeCategories:
+  - Regex: '^<[^\/]*\.h>'  # C system headers
+    Priority: 1
+    SortPriority: 1
+  - Regex: '^<[^Q/\.]*>'  # C++ system headers
+    Priority: 3
+    SortPriority: 3
+  - Regex: '^<Q[^\/]*>'  # Qt Headers
+    Priority: 2
+    SortPriority: 2
+  - Regex: '^<.*\.h>'  # Other headers
+    Priority: 4
+    SortPriority: 4
+  - Regex: '^<.*\.hpp>'  # ROS External Headers
+    Priority: 5
+    SortPriority: 5
+  - Regex: '^".*\.h"'  # Other Internal Headers
+    Priority: 6
+    SortPriority: 6
+  - Regex: '^".*\.hpp"'  # ROS Internal Headers
+    Priority: 7
+    SortPriority: 7

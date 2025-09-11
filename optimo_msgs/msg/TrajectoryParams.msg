@@ -1,0 +1,3 @@
+ImpedanceParams imp
+float64 recovery_speed
+bool accept_diff_start

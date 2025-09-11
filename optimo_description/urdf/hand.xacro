@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="hand">
+  <!-- safety_distance: Minimum safety distance in [m] by which the collision volumes are expanded
+  and which is enforced during robot motions -->
+  <xacro:macro name="hand" params="connected_to:='' rpy:='0 0 0' xyz:='0 0 0' safety_distance:=0 prefix:=''">
+    <!-- <xacro:unless value="${connected_to == ''}"> -->
+    <joint name="${prefix}hand_joint" type="fixed">
+      <parent link="${connected_to}" />
+      <child link="${prefix}hand" />
+      <origin xyz="${xyz}" rpy="${rpy}" />
+    </joint>
+    <!-- </xacro:unless> -->
+    <link name="${prefix}hand">
+      <visual>
+        <geometry>
+          <mesh filename="package://optimo_description/meshes/hand.dae" />
+        </geometry>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 0" />
+        <mass value=".01" />
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+      </inertial>
+      <collision>
+        <origin xyz="0 0 0.04" rpy="0 ${pi/2} ${pi/2}" />
+        <geometry>
+          <cylinder radius="${0.04+safety_distance}" length="0.1" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 -0.05 0.04" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="${0.04+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0.05 0.04" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="${0.04+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 0.1" rpy="0 ${pi/2} ${pi/2}" />
+        <geometry>
+          <cylinder radius="${0.02+safety_distance}" length="0.1" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 -0.05 0.1" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="${0.02+safety_distance}" />
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0.05 0.1" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="${0.02+safety_distance}" />
+        </geometry>
+      </collision>
+    </link>
+    <!-- Define the hand_tcp frame -->
+    <link name="${prefix}hand_tcp" />
+    <joint name="${prefix}hand_tcp_joint" type="fixed">
+      <origin xyz="0 0 0.1034" rpy="0 0 0" />
+      <parent link="${prefix}hand" />
+      <child link="${prefix}hand_tcp" />
+    </joint>
+    <link name="${prefix}leftfinger">
+      <visual>
+        <geometry>
+          <mesh filename="package://optimo_description/meshes/finger.dae" />
+        </geometry>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 0" />
+        <mass value=".01" />
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+      </inertial>
+    </link>
+    <link name="${prefix}rightfinger">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 ${pi}" />
+        <geometry>
+          <mesh filename="package://optimo_description/meshes/finger.dae" />
+        </geometry>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 0" />
+        <mass value=".01" />
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+      </inertial>
+    </link>
+    <joint name="${prefix}left_finger_joint" type="prismatic">
+      <parent link="${prefix}hand" />
+      <child link="${prefix}leftfinger" />
+      <origin xyz="0 0 0.0584" rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+      <limit effort="20" lower="0" upper="0.07" velocity="0.2" />
+    </joint>
+    <joint name="${prefix}right_finger_joint" type="prismatic">
+      <parent link="${prefix}hand" />
+      <child link="${prefix}rightfinger" />
+      <origin xyz="0 0 0.0584" rpy="0 0 0" />
+      <axis xyz="0 -1 0" />
+      <limit effort="20" lower="0.0" upper="0.07" velocity="0.2" />
+      <mimic joint="${prefix}left_finger_joint" multiplier="-1.0" offset="0" />
+    </joint>
+  </xacro:macro>
+</robot>

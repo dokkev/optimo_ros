@@ -1,0 +1,4 @@
+int32 duration
+string string # Can be a filepath or topic name depending on the user
+---
+bool success

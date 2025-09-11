@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:macro name="optimo_ros2_control" params="name initial_positions_file">
+        <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)['initial_positions']}"/>
+
+        <ros2_control name="${name}" type="system">
+            <hardware>
+                <!-- By default, set up controllers for simulation. This won't work on real hardware -->
+                <plugin>mock_components/GenericSystem</plugin>
+            </hardware>
+            <joint name="joint1">
+            </joint>
+            <joint name="joint2">
+            </joint>
+            <joint name="joint3">
+            </joint>
+            <joint name="joint4">
+            </joint>
+            <joint name="joint5">
+            </joint>
+            <joint name="joint6">
+            </joint>
+            <joint name="joint7">
+            </joint>
+
+        </ros2_control>
+    </xacro:macro>
+</robot>
