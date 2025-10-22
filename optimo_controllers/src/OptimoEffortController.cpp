@@ -140,103 +140,100 @@ controller_interface::return_type OptimoEffortController::update(
   }
   prev_communication_enabled = communication_enabled;
 
+  //////////////////////////////////////////////////////////////////////////
+  // Publish end-effector pose
+  optimo_msgs::msg::PoseElbow ee_pose_msg;
 
-//////////////////////////////////////////////////////////////////////////
-//   // Publish end-effector pose
-//   optimo_msgs::msg::PoseElbow ee_pose_msg;
+  // Get TCP pose from model
+  eef_point = model->get_tcp_pose();
 
-//   // Get TCP pose from model
-//   eef_point = model->get_tcp_pose();
+  // Set translation
+  ee_pose_msg.pose.position.x = eef_point[0];
+  ee_pose_msg.pose.position.y = eef_point[1];
+  ee_pose_msg.pose.position.z = eef_point[2];
 
-//   // Set translation
-//   ee_pose_msg.pose.position.x = eef_point[0];
-//   ee_pose_msg.pose.position.y = eef_point[1];
-//   ee_pose_msg.pose.position.z = eef_point[2];
+  // Convert custom orientation representation to quaternion
 
-// // Convert custom orientation representation to quaternion
+  // Extract target Z-axis from eef_point
+  Eigen::Vector3d target_z_axis(eef_point[3], eef_point[4], eef_point[5]);
 
-//   // Extract target Z-axis from eef_point
-//   Eigen::Vector3d target_z_axis(eef_point[3], eef_point[4], eef_point[5]);
+  // Get J6's current frame X-axis
+  // Get J6's current frame X-axis
+  Eigen::Vector3d J6_x_axis = model->get_rotation_eigen(6).col(0);
 
-//   // Get J6's current frame X-axis
-//   // Get J6's current frame X-axis
-//   Eigen::Vector3d J6_x_axis = model->get_rotation_eigen(6).col(0);
+  // Project J6's X-axis onto the plane perpendicular to target_z_axis
+  Eigen::Vector3d proj = (J6_x_axis - target_z_axis * target_z_axis.dot(J6_x_axis)).normalized();
 
+  // Reconstruct the X-axis using the stored angle
+  double angle = eef_point[6];
+  Eigen::Vector3d target_x_axis = proj * std::cos(angle) + target_z_axis.cross(proj) *
+  std::sin(angle);
 
-//   // Project J6's X-axis onto the plane perpendicular to target_z_axis
-//   Eigen::Vector3d proj = (J6_x_axis - target_z_axis * target_z_axis.dot(J6_x_axis)).normalized();
+  // Compute the Y-axis as the cross product of Z and X to ensure a right-handed frame
+  Eigen::Vector3d target_y_axis = target_z_axis.cross(target_x_axis).normalized();
 
-//   // Reconstruct the X-axis using the stored angle
-//   double angle = eef_point[6];
-//   Eigen::Vector3d target_x_axis = proj * std::cos(angle) + target_z_axis.cross(proj) * std::sin(angle);
+  // Construct the rotation matrix
+  Eigen::Matrix3d R;
+  R.col(0) = target_x_axis;
+  R.col(1) = target_y_axis;
+  R.col(2) = target_z_axis;
 
-//   // Compute the Y-axis as the cross product of Z and X to ensure a right-handed frame
-//   Eigen::Vector3d target_y_axis = target_z_axis.cross(target_x_axis).normalized();
+  // Convert rotation matrix to quaternion
+  Eigen::Quaterniond q(R);
 
-//   // Construct the rotation matrix
-//   Eigen::Matrix3d R;
-//   R.col(0) = target_x_axis;
-//   R.col(1) = target_y_axis;
-//   R.col(2) = target_z_axis;
+  // Assign quaternion values to the pose message
+  ee_pose_msg.pose.orientation.w = q.w();
+  ee_pose_msg.pose.orientation.x = q.x();
+  ee_pose_msg.pose.orientation.y = q.y();
+  ee_pose_msg.pose.orientation.z = q.z();
 
-//   // Convert rotation matrix to quaternion
-//   Eigen::Quaterniond q(R);
+  // Assign elbow angle
+  ee_pose_msg.elbow_angle = model->get_elbow_pose().angle;
 
-//   // Assign quaternion values to the pose message
-//   ee_pose_msg.pose.orientation.w = q.w();
-//   ee_pose_msg.pose.orientation.x = q.x();
-//   ee_pose_msg.pose.orientation.y = q.y();
-//   ee_pose_msg.pose.orientation.z = q.z();
+  // Publish end-effector pose message
+  ee_pose_pub_->publish(ee_pose_msg);
 
+  // // Create and publish the TF
+  // geometry_msgs::msg::TransformStamped transform_stamped;
+  // transform_stamped.header.stamp = get_node()->get_clock()->now();
+  // transform_stamped.header.frame_id = "stand";
+  // transform_stamped.child_frame_id = "end_effector";
 
-//   // Assign elbow angle
-//   ee_pose_msg.elbow_angle = model->get_elbow_pose().angle;
+  // // Set translation
+  // transform_stamped.transform.translation.x = eef_point[0];
+  // transform_stamped.transform.translation.y = eef_point[1];
+  // transform_stamped.transform.translation.z = eef_point[2];
 
-//   // Publish end-effector pose message
-//   ee_pose_pub_->publish(ee_pose_msg);
+  // // Copy orientation (already converted to quaternion)
+  // transform_stamped.transform.rotation.w = ee_pose_msg.pose.orientation.w;
+  // transform_stamped.transform.rotation.x = ee_pose_msg.pose.orientation.x;
+  // transform_stamped.transform.rotation.y = ee_pose_msg.pose.orientation.y;
+  // transform_stamped.transform.rotation.z = ee_pose_msg.pose.orientation.z;
 
-//   // Create and publish the TF
-//   geometry_msgs::msg::TransformStamped transform_stamped;
-//   transform_stamped.header.stamp = get_node()->get_clock()->now();
-//   transform_stamped.header.frame_id = "stand"; 
-//   transform_stamped.child_frame_id = "end_effector"; 
+  // // Publish the transform
+  // tf_broadcaster_->sendTransform(transform_stamped);
 
-//   // Set translation
-//   transform_stamped.transform.translation.x = eef_point[0];
-//   transform_stamped.transform.translation.y = eef_point[1];
-//   transform_stamped.transform.translation.z = eef_point[2];
+  // Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
 
-//   // Copy orientation (already converted to quaternion)
-//   transform_stamped.transform.rotation.w = ee_pose_msg.pose.orientation.w;
-//   transform_stamped.transform.rotation.x = ee_pose_msg.pose.orientation.x;
-//   transform_stamped.transform.rotation.y = ee_pose_msg.pose.orientation.y;
-//   transform_stamped.transform.rotation.z = ee_pose_msg.pose.orientation.z;
+  // // publish jacobian
+  // std_msgs::msg::Float64MultiArray jacobian_msg;
 
-//   // Publish the transform
-//   tf_broadcaster_->sendTransform(transform_stamped);
+  // // Specify layout (rows × cols)
+  // jacobian_msg.layout.dim.resize(2);
+  // jacobian_msg.layout.dim[0].label = "rows";
+  // jacobian_msg.layout.dim[0].size = J.rows();
+  // jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
+  // jacobian_msg.layout.dim[1].label = "cols";
+  // jacobian_msg.layout.dim[1].size = J.cols();
+  // jacobian_msg.layout.dim[1].stride = J.cols();
 
-//   Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
+  // // Fill row-major data
+  // jacobian_msg.data.resize(J.size());
+  // for (int r = 0; r < J.rows(); ++r)
+  //   for (int c = 0; c < J.cols(); ++c)
+  //     jacobian_msg.data[r * J.cols() + c] = J(r, c);
 
-//   // publish jacobian
-//   std_msgs::msg::Float64MultiArray jacobian_msg;
-
-//   // Specify layout (rows × cols)
-//   jacobian_msg.layout.dim.resize(2);
-//   jacobian_msg.layout.dim[0].label = "rows";
-//   jacobian_msg.layout.dim[0].size = J.rows();
-//   jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
-//   jacobian_msg.layout.dim[1].label = "cols";
-//   jacobian_msg.layout.dim[1].size = J.cols();
-//   jacobian_msg.layout.dim[1].stride = J.cols();
-
-//   // Fill row-major data
-//   jacobian_msg.data.resize(J.size());
-//   for (int r = 0; r < J.rows(); ++r)
-//     for (int c = 0; c < J.cols(); ++c)
-//       jacobian_msg.data[r * J.cols() + c] = J(r, c);
-
-//   jacobian_pub_->publish(jacobian_msg);
-
+  // jacobian_pub_->publish(jacobian_msg);
 
   ///////////////////////////////////////////////////
 
@@ -249,14 +246,42 @@ controller_interface::return_type OptimoEffortController::update(
   ext_force_msg.wrench.force.x = ext_force[0];
   ext_force_msg.wrench.force.y = ext_force[1];
   ext_force_msg.wrench.force.z = ext_force[2];
-  ext_force_msg.wrench.torque.x = 0.0; // Assuming no torque for external force
+  ext_force_msg.wrench.torque.x = 0.0;  // Assuming no torque for external force
   ext_force_msg.wrench.torque.y = 0.0;
-  ext_force_msg.wrench.torque.z = 0.0; // Assuming no torque for external force
+  ext_force_msg.wrench.torque.z = 0.0;  // Assuming no torque for external force
 
   ext_wrench_pub_->publish(ext_force_msg);
 
+  // Use the listener to get world→ee
+  try {
+    const auto now = get_node()->get_clock()->now();
 
+    // Get world→ee (composes static + dynamic as needed)
+    geometry_msgs::msg::TransformStamped T_world_ee =
+      tf_buffer_->lookupTransform("stand", "ee", rclcpp::Time(0));
 
+    // Publish PoseElbow
+    optimo_msgs::msg::PoseElbow ee_pose_msg;
+    ee_pose_msg.pose.position.x = T_world_ee.transform.translation.x;
+    ee_pose_msg.pose.position.y = T_world_ee.transform.translation.y;
+    ee_pose_msg.pose.position.z = T_world_ee.transform.translation.z;
+    ee_pose_msg.pose.orientation.w = T_world_ee.transform.rotation.w;
+    ee_pose_msg.pose.orientation.x = T_world_ee.transform.rotation.x;
+    ee_pose_msg.pose.orientation.y = T_world_ee.transform.rotation.y;
+    ee_pose_msg.pose.orientation.z = T_world_ee.transform.rotation.z;
+    // keep your elbow field if applicable
+    ee_pose_msg.elbow_angle = model->get_elbow_pose().angle;
+    ee_pose_pub_->publish(ee_pose_msg);
+
+    // Also publish the TF on /tf
+    T_world_ee.header.stamp = now;
+    T_world_ee.header.frame_id = "stand";
+    T_world_ee.child_frame_id = "end_effector";
+    tf_broadcaster_->sendTransform(T_world_ee);
+
+  } catch (const tf2::TransformException & ex) {
+    RCLCPP_WARN(get_node()->get_logger(), "TF lookup world->ee failed: %s", ex.what());
+  }
 
   return controller_interface::return_type::OK;
 }
@@ -386,16 +411,18 @@ CallbackReturn OptimoEffortController::on_init()
     std::make_unique<ServoFbCallback>(*model, current_task, get_node()));
   LOG_INFO("OptimoEffortController::on_init: Effort controller initialized.");
 
-  ee_pose_pub_ = get_node()->create_publisher<optimo_msgs::msg::PoseElbow>(
-      "/optimo/ee_pose_current", 10);
+  ee_pose_pub_ =
+    get_node()->create_publisher<optimo_msgs::msg::PoseElbow>("/optimo/ee_pose_current", 10);
 
   jacobian_pub_ = get_node()->create_publisher<std_msgs::msg::Float64MultiArray>(
-      "/optimo/jacobian", rclcpp::QoS(10));
-      
-  ext_wrench_pub_ = get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>(
-      "/optimo/external_wrench", 10);
-  
+    "/optimo/jacobian", rclcpp::QoS(10));
+
+  ext_wrench_pub_ =
+    get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>("/optimo/external_wrench", 10);
+
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*get_node());
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_node()->get_clock());
+  tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_, get_node());
 
   return CallbackReturn::SUCCESS;
 }
@@ -407,10 +434,12 @@ void OptimoEffortController::update_task()
   task_mtx.lock();
   if (current_task) {
     if (current_task->is_completed()) {
-      // RCLCPP_INFO(get_node()->get_logger(), "Task completed, ID: %d", current_task->command().id);
+      // RCLCPP_INFO(get_node()->get_logger(), "Task completed, ID: %d",
+      // current_task->command().id);
       complete_task();
     } else {
-      // RCLCPP_INFO(get_node()->get_logger(), "Task still in progress, ID: %d", current_task->command().id);
+      // RCLCPP_INFO(get_node()->get_logger(), "Task still in progress, ID: %d",
+      // current_task->command().id);
       task_mtx.unlock();
       return;
     }
@@ -447,8 +476,7 @@ void OptimoEffortController::update_task()
       break;
     default:
       RCLCPP_ERROR(
-        get_node()->get_logger(),
-        "OptimoEffortController::update_task: Unknown CommandID %d",
+        get_node()->get_logger(), "OptimoEffortController::update_task: Unknown CommandID %d",
         current_task->command().id);
       current_task->set_status(roboligent::CommandStatus::FAILURE);
       complete_task();
@@ -628,10 +656,11 @@ void OptimoEffortController::moveit_cb(
   cmd.data[0] = request->param.impedance;
   cmd.data[1] = request->param.max_force;
   cmd.data[2] = request->param.stop_sensitivity;
-  cmd.command_data = roboligent::Pose(std::vector<double>(
-    {request->target.position.x, request->target.position.y, request->target.position.z,
-     request->target.orientation.x, request->target.orientation.y, request->target.orientation.z,
-     request->target.orientation.w}));
+  cmd.command_data = roboligent::Pose(
+    std::vector<double>(
+      {request->target.position.x, request->target.position.y, request->target.position.z,
+       request->target.orientation.x, request->target.orientation.y, request->target.orientation.z,
+       request->target.orientation.w}));
   // currently do not accept orientation
 
   LOG_INFO("OptimoEffortController:moveit_cb: Queued playing a trajectory with MoveIt");

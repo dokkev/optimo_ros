@@ -19,8 +19,15 @@
 
 #include <rl/controller/AbstractCallback.h>
 #include <rl/model/Model.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
 
 #include <controller_interface/controller_interface.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <optimo_msgs/msg/pose_elbow.hpp>
 #include <optimo_msgs/srv/generic_cb.hpp>
 #include <optimo_msgs/srv/moveit_cb.hpp>
 #include <optimo_msgs/srv/play_traj_cb.hpp>
@@ -29,14 +36,8 @@
 #include <optimo_msgs/srv/string_cb.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
-#include <std_srvs/srv/trigger.hpp>
-
-#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
-#include <optimo_msgs/msg/pose_elbow.hpp>
-#include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 #include "optimo_api/MoveItInterface.h"
 #include "optimo_api/ROSShared.h"
@@ -242,20 +243,20 @@ private:
   rclcpp::Service<optimo_msgs::srv::StringCb>::SharedPtr servo_fb_srv;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr enable_load_calculation_srv;
 
-
-
-
   Eigen::VectorXd measured_torque_;  // [Nm] measured from the effort interface
-  std::vector<int> effort_idx_;      // cached indices into state_interfaces_  
+  std::vector<int> effort_idx_;      // cached indices into state_interfaces_
 
   // --- New Publisher for End-Effector Pose ---
   rclcpp::Publisher<optimo_msgs::msg::PoseElbow>::SharedPtr ee_pose_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jacobian_pub_;
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr ext_wrench_pub_;
-  
 
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   std::vector<double> eef_point;
+
+  // Listener and buffer
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 };
 }  // namespace optimo_ros
 
