@@ -1,8 +1,8 @@
 ## Optimo Hardware Config
 Roboligent has assigned serial numbers to each Optimo Robot. Depending on the robot model, `optimo_api/resources/master0/OR7_config.yml` is unique to the specific hardware and should not be modified.
 
-- AHG Optimo: `OR70003-1738945376`
-- HCRL Optimo: `TBD`
+- AHG Optimo: `O7R0003-1738945376`
+- HCRL Optimo: `O7R0006-1738946871`
 
 Therefore resources directory is not tracked in git as it's defined inside `.gitignore` file. Instead, `optimo_api/OR7_config_backup` contains the backup config file for HCRL and AHG Optimo.    
 
