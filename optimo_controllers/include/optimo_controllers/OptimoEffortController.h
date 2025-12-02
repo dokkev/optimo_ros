@@ -248,6 +248,7 @@ private:
 
   // --- New Publisher for End-Effector Pose ---
   rclcpp::Publisher<optimo_msgs::msg::PoseElbow>::SharedPtr ee_pose_pub_;
+  rclcpp::Publisher<optimo_msgs::msg::PoseElbow>::SharedPtr ee_pose_pub_2;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jacobian_pub_;
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr ext_wrench_pub_;
 

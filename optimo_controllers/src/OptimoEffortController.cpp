@@ -166,8 +166,8 @@ controller_interface::return_type OptimoEffortController::update(
 
   // Reconstruct the X-axis using the stored angle
   double angle = eef_point[6];
-  Eigen::Vector3d target_x_axis = proj * std::cos(angle) + target_z_axis.cross(proj) *
-  std::sin(angle);
+  Eigen::Vector3d target_x_axis =
+    proj * std::cos(angle) + target_z_axis.cross(proj) * std::sin(angle);
 
   // Compute the Y-axis as the cross product of Z and X to ensure a right-handed frame
   Eigen::Vector3d target_y_axis = target_z_axis.cross(target_x_axis).normalized();
@@ -193,47 +193,46 @@ controller_interface::return_type OptimoEffortController::update(
   // Publish end-effector pose message
   ee_pose_pub_->publish(ee_pose_msg);
 
-  // // Create and publish the TF
-  // geometry_msgs::msg::TransformStamped transform_stamped;
-  // transform_stamped.header.stamp = get_node()->get_clock()->now();
-  // transform_stamped.header.frame_id = "stand";
-  // transform_stamped.child_frame_id = "end_effector";
+  // Create and publish the TF
+  geometry_msgs::msg::TransformStamped transform_stamped;
+  transform_stamped.header.stamp = get_node()->get_clock()->now();
+  transform_stamped.header.frame_id = "stand";
+  transform_stamped.child_frame_id = "end_effector";
 
-  // // Set translation
-  // transform_stamped.transform.translation.x = eef_point[0];
-  // transform_stamped.transform.translation.y = eef_point[1];
-  // transform_stamped.transform.translation.z = eef_point[2];
+  // Set translation
+  transform_stamped.transform.translation.x = eef_point[0];
+  transform_stamped.transform.translation.y = eef_point[1];
+  transform_stamped.transform.translation.z = eef_point[2];
 
-  // // Copy orientation (already converted to quaternion)
-  // transform_stamped.transform.rotation.w = ee_pose_msg.pose.orientation.w;
-  // transform_stamped.transform.rotation.x = ee_pose_msg.pose.orientation.x;
-  // transform_stamped.transform.rotation.y = ee_pose_msg.pose.orientation.y;
-  // transform_stamped.transform.rotation.z = ee_pose_msg.pose.orientation.z;
+  // Copy orientation (already converted to quaternion)
+  transform_stamped.transform.rotation.w = ee_pose_msg.pose.orientation.w;
+  transform_stamped.transform.rotation.x = ee_pose_msg.pose.orientation.x;
+  transform_stamped.transform.rotation.y = ee_pose_msg.pose.orientation.y;
+  transform_stamped.transform.rotation.z = ee_pose_msg.pose.orientation.z;
 
-  // // Publish the transform
-  // tf_broadcaster_->sendTransform(transform_stamped);
+  // Publish the transform
+  tf_broadcaster_->sendTransform(transform_stamped);
 
-  // Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
+  Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
 
-  // // publish jacobian
-  // std_msgs::msg::Float64MultiArray jacobian_msg;
+  // publish jacobian
+  std_msgs::msg::Float64MultiArray jacobian_msg;
 
-  // // Specify layout (rows × cols)
-  // jacobian_msg.layout.dim.resize(2);
-  // jacobian_msg.layout.dim[0].label = "rows";
-  // jacobian_msg.layout.dim[0].size = J.rows();
-  // jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
-  // jacobian_msg.layout.dim[1].label = "cols";
-  // jacobian_msg.layout.dim[1].size = J.cols();
-  // jacobian_msg.layout.dim[1].stride = J.cols();
+  // Specify layout (rows × cols)
+  jacobian_msg.layout.dim.resize(2);
+  jacobian_msg.layout.dim[0].label = "rows";
+  jacobian_msg.layout.dim[0].size = J.rows();
+  jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
+  jacobian_msg.layout.dim[1].label = "cols";
+  jacobian_msg.layout.dim[1].size = J.cols();
+  jacobian_msg.layout.dim[1].stride = J.cols();
 
-  // // Fill row-major data
-  // jacobian_msg.data.resize(J.size());
-  // for (int r = 0; r < J.rows(); ++r)
-  //   for (int c = 0; c < J.cols(); ++c)
-  //     jacobian_msg.data[r * J.cols() + c] = J(r, c);
+  // Fill row-major data
+  jacobian_msg.data.resize(J.size());
+  for (int r = 0; r < J.rows(); ++r)
+    for (int c = 0; c < J.cols(); ++c) jacobian_msg.data[r * J.cols() + c] = J(r, c);
 
-  // jacobian_pub_->publish(jacobian_msg);
+  jacobian_pub_->publish(jacobian_msg);
 
   ///////////////////////////////////////////////////
 
@@ -261,17 +260,17 @@ controller_interface::return_type OptimoEffortController::update(
       tf_buffer_->lookupTransform("stand", "ee", rclcpp::Time(0));
 
     // Publish PoseElbow
-    optimo_msgs::msg::PoseElbow ee_pose_msg;
-    ee_pose_msg.pose.position.x = T_world_ee.transform.translation.x;
-    ee_pose_msg.pose.position.y = T_world_ee.transform.translation.y;
-    ee_pose_msg.pose.position.z = T_world_ee.transform.translation.z;
-    ee_pose_msg.pose.orientation.w = T_world_ee.transform.rotation.w;
-    ee_pose_msg.pose.orientation.x = T_world_ee.transform.rotation.x;
-    ee_pose_msg.pose.orientation.y = T_world_ee.transform.rotation.y;
-    ee_pose_msg.pose.orientation.z = T_world_ee.transform.rotation.z;
+    optimo_msgs::msg::PoseElbow ee_pose_msg_2;
+    ee_pose_msg_2.pose.position.x = T_world_ee.transform.translation.x;
+    ee_pose_msg_2.pose.position.y = T_world_ee.transform.translation.y;
+    ee_pose_msg_2.pose.position.z = T_world_ee.transform.translation.z;
+    ee_pose_msg_2.pose.orientation.w = T_world_ee.transform.rotation.w;
+    ee_pose_msg_2.pose.orientation.x = T_world_ee.transform.rotation.x;
+    ee_pose_msg_2.pose.orientation.y = T_world_ee.transform.rotation.y;
+    ee_pose_msg_2.pose.orientation.z = T_world_ee.transform.rotation.z;
     // keep your elbow field if applicable
-    ee_pose_msg.elbow_angle = model->get_elbow_pose().angle;
-    ee_pose_pub_->publish(ee_pose_msg);
+    ee_pose_msg_2.elbow_angle = model->get_elbow_pose().angle;
+    ee_pose_pub_2->publish(ee_pose_msg_2);
 
     // Also publish the TF on /tf
     T_world_ee.header.stamp = now;
@@ -413,6 +412,9 @@ CallbackReturn OptimoEffortController::on_init()
 
   ee_pose_pub_ =
     get_node()->create_publisher<optimo_msgs::msg::PoseElbow>("/optimo/ee_pose_current", 10);
+
+  ee_pose_pub_2 =
+    get_node()->create_publisher<optimo_msgs::msg::PoseElbow>("/optimo/ee_pose_current_2", 10);
 
   jacobian_pub_ = get_node()->create_publisher<std_msgs::msg::Float64MultiArray>(
     "/optimo/jacobian", rclcpp::QoS(10));
