@@ -148,6 +148,12 @@ To play a trajectory:
 ros2 service call /optimo/optimo_effort_controller/play_traj_cb optimo_msgs/srv/PlayTrajCb "{goal: {filepath: '<add absolute filepath here>', param: {imp: {impedance: 8, max_force: 2, stop_sensitivity: 2}, recovery_speed: 5, accept_diff_start: true}}}"
 ```
 
+To play a joint trajectory:
+
+```bash
+ros2 service call /optimo/optimo_effort_controller/joint_trajectory_cb optimo_msgs/srv/JointTrajectoryCb "{goal: {filepath: '<add absolute filepath here>', param: {imp: {impedance: 8, max_force: 2, stop_sensitivity: 2}, recovery_speed: 5, accept_diff_start: true}}, rate_hz: 100.0 }"
+```
+
 Parameters for trajectory execution:
 - Impedance: Ratio of force applied to position offset (1-10).
 - Max force: Maximum force applied to follow the trajectory (1-10).

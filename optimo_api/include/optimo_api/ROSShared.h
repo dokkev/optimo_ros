@@ -57,6 +57,7 @@ enum class ROSExtendedCommandID : int
   TEACH = static_cast<int>(optimo::ExtendedCommandID::TEACH),
   PLAY_TRAJ = static_cast<int>(optimo::ExtendedCommandID::PLAY_TRAJ),
   FREE_MOTION = static_cast<int>(optimo::ExtendedCommandID::FREE_MOTION),
+  JOINT_TRAJECTORY = static_cast<int>(optimo::ExtendedCommandID::JOINT_TRAJECTORY),
   OPTIMO_COMMUNICATION_RESERVED =
     static_cast<int>(optimo::ExtendedCommandID::OPTIMO_COMMUNICATION_RESERVED),  // 99
 

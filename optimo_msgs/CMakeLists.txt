@@ -31,6 +31,7 @@ rosidl_generate_interfaces(
   "msg/ImpedanceParams.msg"
   "msg/PoseElbow.msg"
   "srv/PlayTrajCb.srv"
+  "srv/JointTrajectoryCb.srv"
   "srv/StringCb.srv"
   "srv/GenericCb.srv"
   "srv/PosCb.srv"

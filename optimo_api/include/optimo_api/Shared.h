@@ -95,6 +95,7 @@ enum class ExtendedCommandID : int {
     TEACH,
     PLAY_TRAJ,
     FREE_MOTION,
+    JOINT_TRAJECTORY,
 
     OPTIMO_COMMUNICATION_RESERVED = 99
 };

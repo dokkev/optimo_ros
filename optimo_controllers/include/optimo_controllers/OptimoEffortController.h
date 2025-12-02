@@ -27,6 +27,7 @@
 #include <optimo_msgs/srv/pos_cb.hpp>
 #include <optimo_msgs/srv/servo_cb.hpp>
 #include <optimo_msgs/srv/string_cb.hpp>
+#include <optimo_msgs/srv/joint_trajectory_cb.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
 #include <std_srvs/srv/trigger.hpp>
@@ -121,6 +122,17 @@ private:
   void move_home_cb(
     const std::shared_ptr<optimo_msgs::srv::PosCb::Request> request,
     const std::shared_ptr<optimo_msgs::srv::PosCb::Response> response);
+  
+  /**
+   * @brief HCRL::joint_trajectory service callback. Load a join trajectory from file with given rate (in Hz).
+   * 
+   * @param request 
+   * @param response 
+   */
+
+  void joint_trajectory_cb(
+    const std::shared_ptr<optimo_msgs::srv::JointTrajectoryCb::Request> request,
+    const std::shared_ptr<optimo_msgs::srv::JointTrajectoryCb::Response> response); 
 
   /**
    * @brief Service Callback for stopping motion.
@@ -233,6 +245,7 @@ private:
   // service for swapping callbacks
   rclcpp::Service<optimo_msgs::srv::GenericCb>::SharedPtr free_motion_srv;
   rclcpp::Service<optimo_msgs::srv::PosCb>::SharedPtr move_home_srv;
+  rclcpp::Service<optimo_msgs::srv::JointTrajectoryCb>::SharedPtr joint_trajectory_srv;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr stop_srv;
   rclcpp::Service<optimo_msgs::srv::StringCb>::SharedPtr teach_traj_srv;
   rclcpp::Service<optimo_msgs::srv::PlayTrajCb>::SharedPtr play_traj_srv;

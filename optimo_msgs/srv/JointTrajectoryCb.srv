@@ -1,0 +1,5 @@
+int32 duration
+TrajectoryGoal goal
+float64 rate_hz
+---
+bool success

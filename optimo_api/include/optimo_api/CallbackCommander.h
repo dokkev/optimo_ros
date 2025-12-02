@@ -21,6 +21,7 @@
 #include "optimo_api/FreeMotionCallback.h"
 #include "optimo_api/IdleCallback.h"
 #include "optimo_api/MoveHomeCallback.h"
+#include "optimo_api/JointTrajectoryCallback.h"
 #include "optimo_api/PlayTrajCallback.h"
 #include "optimo_api/RecordCalibrationCallback.h"
 #include "optimo_api/TeachCallback.h"
@@ -87,6 +88,7 @@ private:
   PlayTrajCallback play_traj_cb;
   TeachCallback teach_cb;
   MoveHomeCallback move_home_cb;
+  JointTrajectoryCallback joint_traj_cb;
   RecordCalibrationCallback rec_cali_cb;
 };
 }  // namespace optimo

@@ -32,6 +32,7 @@ CallbackCommander::CallbackCommander(
   play_traj_cb(model_, task_),
   teach_cb(model_, task_),
   move_home_cb(model_, task_),
+  joint_traj_cb(model_, task_),
   rec_cali_cb(model_, task_, data_)
 {
 }
@@ -65,12 +66,14 @@ void CallbackCommander::arm_cb(std::vector<int> & torque_)
     case static_cast<int>(optimo::ExtendedCommandID::PLAY_TRAJ):
       play_traj_cb.get_torque(torque_);
       break;
-
     case static_cast<int>(optimo::ExtendedCommandID::TEACH):
       teach_cb.get_torque(torque_);
       break;
     case static_cast<int>(optimo::ExtendedCommandID::MOVE_HOME):
       move_home_cb.get_torque(torque_);
+      break;
+    case static_cast<int>(optimo::ExtendedCommandID::JOINT_TRAJECTORY):
+      joint_traj_cb.get_torque(torque_);
       break;
     case static_cast<int>(optimo::ExtendedCommandID::NONE):
     default:

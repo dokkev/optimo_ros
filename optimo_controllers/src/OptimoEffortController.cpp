@@ -37,6 +37,7 @@
 #include "optimo_api/ServoCallback.h"
 #include "optimo_api/ServoFbCallback.h"
 #include "optimo_api/TeachCallback.h"
+#include "optimo_api/IO.h"
 
 namespace optimo_ros
 {
@@ -287,6 +288,9 @@ CallbackReturn OptimoEffortController::on_init()
   move_home_srv = get_node()->create_service<optimo_msgs::srv::PosCb>(
     "~/move_home_cb", std::bind(&OptimoEffortController::move_home_cb, this, _1, _2),
     rmw_qos_profile_default, cb_group);
+  joint_trajectory_srv = get_node()->create_service<optimo_msgs::srv::JointTrajectoryCb>( 
+    "~/joint_trajectory_cb", std::bind(&OptimoEffortController::joint_trajectory_cb, this, _1, _2),
+    rmw_qos_profile_default, cb_group);
   stop_srv = get_node()->create_service<std_srvs::srv::Trigger>(
     "~/stop_cb", std::bind(&OptimoEffortController::stop_cb, this, _1, _2), rmw_qos_profile_default,
     cb_group);
@@ -508,6 +512,63 @@ void OptimoEffortController::move_home_cb(
   cmd.command_data = std::vector<double>(request->pos);  // fix syntax
 
   LOG_INFO("OptimoEffortController::move_home_cb: Queued move home");
+  response->success = queue_task(MAKE_SHARED_TASK(
+    optimo::Task(cmd, request->duration > 0 ? request->duration : roboligent::Timer::NO_TIMEOUT)));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void OptimoEffortController::joint_trajectory_cb(
+  const std::shared_ptr<optimo_msgs::srv::JointTrajectoryCb::Request> request,
+  const std::shared_ptr<optimo_msgs::srv::JointTrajectoryCb::Response> response)
+{
+  if (request->goal.filepath == "") {
+    // todo enable parsing of non filepath trajectories
+    LOG_ERROR(
+      "OptimoEffortController::joint_trajectory_cb: No filepath given for play trajectory "
+      "command.");
+    response->success = false;
+    return;
+  } 
+  if (request->rate_hz <= 0) {
+    LOG_ERROR(
+      "OptimoEffortController::joint_trajectory_cb: Invalid rate_hz given for joint trajectory "
+      "command.");
+    response->success = false;
+    return;
+  }
+
+  roboligent::RobotCommand cmd;
+  cmd.id = static_cast<int>(ROSExtendedCommandID::JOINT_TRAJECTORY);
+  // transfer TrajectoryGoal
+  roboligent::TrajectoryGoal goal;
+  // No clue how the traj reader is implemented in the OPTIMO API, 
+  // the best we can do is init a trajectory, read the file using std and populate the trajectory.
+  // Thanks to that they have a reset function that takes std::vector<std::vector<double>>
+  auto traj_data = optimo::utils::read_trajectory_file(request->goal.filepath);
+  if (traj_data.empty()) {
+    response->success = false;
+    return;
+  }
+
+  if (!goal.traj_reader.reset(traj_data, request->rate_hz, roboligent::TrajType::JOINT)) {
+    response->success = false;
+    return;
+  }
+
+  if (request->goal.param.imp.impedance != 0)
+    goal.param.impedance = request->goal.param.imp.impedance;
+  if (request->goal.param.imp.max_force != 0)
+    goal.param.max_force = request->goal.param.imp.max_force;
+  if (request->goal.param.imp.stop_sensitivity != 0)
+    goal.param.stop_sensitivity = request->goal.param.imp.stop_sensitivity;
+  if (request->goal.param.recovery_speed != 0)
+    goal.param.recovery_speed = request->goal.param.recovery_speed;
+  goal.param.accept_diff_start = request->goal.param.accept_diff_start;
+  goal.param.servo = false;  // should not be a parameter
+  cmd.command_data = goal;
+
+  LOG_INFO("OptimoEffortController:play_traj_cb: Queued trajectory playing.");
   response->success = queue_task(MAKE_SHARED_TASK(
     optimo::Task(cmd, request->duration > 0 ? request->duration : roboligent::Timer::NO_TIMEOUT)));
 }
