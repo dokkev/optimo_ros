@@ -93,15 +93,9 @@ Turn off harware
 
 ## PLATO Hand
 
-### To launch Plato hand (this starts contact estimation)
+### Poking Position
 ```
-ros2 launch plato2_hardware_interface plato2_finger_hardware.launch.py 
-
-```
-
-Contact info can be obtained from the following topic:
-```
-/plato2/b_contact_index
+ros2 launch plato2_bringup plato_poke.launch.py 
 ```
 
 

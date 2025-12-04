@@ -273,10 +273,10 @@ controller_interface::return_type OptimoEffortController::update(
     ee_pose_pub_2->publish(ee_pose_msg_2);
 
     // Also publish the TF on /tf
-    T_world_ee.header.stamp = now;
-    T_world_ee.header.frame_id = "stand";
-    T_world_ee.child_frame_id = "end_effector";
-    tf_broadcaster_->sendTransform(T_world_ee);
+    // T_world_ee.header.stamp = now;
+    // T_world_ee.header.frame_id = "stand";
+    // T_world_ee.child_frame_id = "end_effector";
+    // tf_broadcaster_->sendTransform(T_world_ee);
 
   } catch (const tf2::TransformException & ex) {
     RCLCPP_WARN(get_node()->get_logger(), "TF lookup world->ee failed: %s", ex.what());

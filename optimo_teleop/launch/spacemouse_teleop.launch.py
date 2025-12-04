@@ -18,21 +18,9 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package="spaceMouse_navigator",
-            executable="spaceMouse_publisher",
-            name="spaceMouse_publisher",
-            output="screen"
-        ),
-        Node(
             package="plato_teleop",
-            executable="controller_spaceMouse",
-            name="controller_spaceMouse",
-            output="screen"
+            executable="spacemouse_twist",          # publishes twists from the SpaceMouse
+            name="spacemouse_twist",
+            output="screen",
         ),
-        Node(
-            package="spaceMouse_navigator",
-            executable="spaceMouse_state_machine",
-            name="spaceMouse_state_machine",
-            output="screen"
-        )
     ])
