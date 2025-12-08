@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "optimo_teleop/teleop_node.hpp"
+#include "optimo_teleop/twist_teleop_node.hpp"
 
 #include <chrono>
 #include <functional>
