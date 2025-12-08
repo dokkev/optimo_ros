@@ -19,7 +19,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package="plato_teleop",
-            executable="spacemouse_twist",          # publishes twists from the SpaceMouse
+            executable="spacemouse_twist.py",          # publishes twists from the SpaceMouse
             name="spacemouse_twist",
             output="screen",
         ),
