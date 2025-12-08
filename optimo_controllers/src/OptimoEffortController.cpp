@@ -140,20 +140,6 @@ controller_interface::return_type OptimoEffortController::update(
   }
   prev_communication_enabled = communication_enabled;
 
-  // Publish external wrench
-  Eigen::Vector3d ext_force = model->get_ee_force();
-  geometry_msgs::msg::WrenchStamped ext_force_msg;
-  ext_force_msg.header.stamp = get_node()->get_clock()->now();
-  ext_force_msg.header.frame_id = "end_effector";
-  ext_force_msg.wrench.force.x = ext_force[0];
-  ext_force_msg.wrench.force.y = ext_force[1];
-  ext_force_msg.wrench.force.z = ext_force[2];
-  ext_force_msg.wrench.torque.x = 0.0;
-  ext_force_msg.wrench.torque.y = 0.0;
-  ext_force_msg.wrench.torque.z = 0.0;
-
-  ext_wrench_pub_->publish(ext_force_msg);
-
   return controller_interface::return_type::OK;
 }
 
@@ -281,9 +267,6 @@ CallbackReturn OptimoEffortController::on_init()
     static_cast<int>(ROSExtendedCommandID::SERVO_FB),
     std::make_unique<ServoFbCallback>(*model, current_task, get_node()));
   LOG_INFO("OptimoEffortController::on_init: Effort controller initialized.");
-
-  ext_wrench_pub_ =
-    get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>("/optimo/external_wrench", 10);
 
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*get_node());
 
