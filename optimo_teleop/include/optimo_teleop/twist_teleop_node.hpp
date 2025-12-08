@@ -49,6 +49,7 @@ private:
   optimo_msgs::msg::PoseElbow desired_pose_;
   std::mutex pose_mutex_;
   bool initialized_ = false;
+  bool initialized_from_tf_ = false;
 
   // Parameters
   double position_scale_;  // Scale factor for position control
