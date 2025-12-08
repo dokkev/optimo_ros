@@ -42,4 +42,4 @@
 
 /**/joint_state_broadcaster:
   ros__parameters:
-    update_rate: 50 # Hz, but if main loop slows this also slows
+    update_rate: 100 # Hz, but if main loop slows this also slows
