@@ -30,11 +30,9 @@ public:
   virtual ~OptimoTeleop();
 
 private:
-  void current_pose_callback(const optimo_msgs::msg::PoseElbow::SharedPtr msg);
   void twist_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
 
   // Subscribers
-  rclcpp::Subscription<optimo_msgs::msg::PoseElbow>::SharedPtr current_pose_subscriber_;
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr twist_subscriber_;
 
   // Publisher
@@ -49,7 +47,6 @@ private:
   optimo_msgs::msg::PoseElbow desired_pose_;
   std::mutex pose_mutex_;
   bool initialized_ = false;
-  bool initialized_from_tf_ = false;
 
   // Parameters
   double position_scale_;  // Scale factor for position control

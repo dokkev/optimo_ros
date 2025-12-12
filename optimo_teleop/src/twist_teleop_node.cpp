@@ -29,11 +29,6 @@ using namespace std::chrono_literals;
 
 OptimoTeleop::OptimoTeleop(const rclcpp::NodeOptions & options) : Node("optimo_teleop", options)
 {
-  // Subscribe to current end-effector pose
-  current_pose_subscriber_ = this->create_subscription<optimo_msgs::msg::PoseElbow>(
-    "/optimo/ee_pose_current", 10,
-    std::bind(&OptimoTeleop::current_pose_callback, this, std::placeholders::_1));
-
   // Initialize TF2 Buffer and Listener
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -56,18 +51,6 @@ OptimoTeleop::OptimoTeleop(const rclcpp::NodeOptions & options) : Node("optimo_t
 
 OptimoTeleop::~OptimoTeleop() {}
 
-void OptimoTeleop::current_pose_callback(const optimo_msgs::msg::PoseElbow::SharedPtr msg)
-{
-  std::lock_guard<std::mutex> lock(pose_mutex_);
-  current_pose_ = *msg;
-
-  if (!initialized_ || initialized_from_tf_) {
-    desired_pose_ = current_pose_;
-    initialized_ = true;
-    initialized_from_tf_ = false;
-    RCLCPP_INFO(this->get_logger(), "Desired pose initialized from /optimo/ee_pose_current.");
-  }
-}
 
 void OptimoTeleop::twist_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
@@ -78,7 +61,7 @@ void OptimoTeleop::twist_callback(const geometry_msgs::msg::TwistStamped::Shared
   try {
     transformStamped = tf_buffer_->lookupTransform(
       "world",                                       // Target frame (world frame)
-      "ee",                                // Source frame (EE local frame)
+      "ee",                                          // Source frame (EE local frame)
       tf2::TimePointZero,                            // Get the latest transform
       tf2::Duration(std::chrono::milliseconds(100))  // Timeout
     );
@@ -89,18 +72,18 @@ void OptimoTeleop::twist_callback(const geometry_msgs::msg::TwistStamped::Shared
     return;
   }
 
-  // Initialize desired pose from TF the first time we get a valid transform. This is only a
-  // temporary seed until the first /optimo/ee_pose_current message arrives.
+  // Update current_pose_ from TF transform
+  current_pose_.pose.position.x = transformStamped.transform.translation.x;
+  current_pose_.pose.position.y = transformStamped.transform.translation.y;
+  current_pose_.pose.position.z = transformStamped.transform.translation.z;
+  current_pose_.pose.orientation = transformStamped.transform.rotation;
+
+  // Initialize desired pose from TF the first time we get a valid transform
   if (!initialized_) {
-    desired_pose_.pose.position.x = transformStamped.transform.translation.x;
-    desired_pose_.pose.position.y = transformStamped.transform.translation.y;
-    desired_pose_.pose.position.z = transformStamped.transform.translation.z;
-    desired_pose_.pose.orientation = transformStamped.transform.rotation;
-    desired_pose_.elbow_angle = current_pose_.elbow_angle;  // default 0 if we haven't received it
-    current_pose_ = desired_pose_;
+    desired_pose_ = current_pose_;
+    desired_pose_.elbow_angle = 0.0;  // default elbow angle
     initialized_ = true;
-    initialized_from_tf_ = true;
-    RCLCPP_INFO(this->get_logger(), "Desired pose initialized from TF transform (world->end_effector). Waiting for /optimo/ee_pose_current to resync if available.");
+    RCLCPP_INFO(this->get_logger(), "Desired pose initialized from TF transform (world->ee).");
   }
 
   // Extract the rotation part of the transform (EE orientation in world frame)
