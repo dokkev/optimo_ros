@@ -13,14 +13,62 @@
 # limitations under the License.
 
 from launch import LaunchDescription
+from launch.actions import ExecuteProcess, TimerAction
 from launch_ros.actions import Node
 
 def generate_launch_description():
+    # Shutdown handler node (calls stop service on Ctrl+C)
+    shutdown_handler_node = Node(
+        package="optimo_teleop",
+        executable="shutdown_handler",
+        name="shutdown_handler",
+        output="screen",
+    )
+
+    # SpaceMouse hardware interface node (from optimo_teleop_hardware package)
+    spacemouse_node = Node(
+        package="optimo_teleop_hardware",
+        executable="spacemouse_twist",
+        name="spacemouse_twist",
+        output="screen",
+    )
+
+    # Twist teleop node (converts twist commands to PoseElbow messages)
+    twist_teleop_node = Node(
+        package="optimo_teleop",
+        executable="twist_teleop_node",
+        namespace="optimo",
+        output="screen",
+        remappings=[
+            ("/tf", "/optimo/tf"),
+            ("/tf_static", "/optimo/tf_static")
+        ]
+    )
+
+    # Call servo service to start servoing
+    start_servo_service = ExecuteProcess(
+        cmd=[
+            "ros2", "service", "call",
+            "/optimo/optimo_effort_controller/servo_cb",
+            "optimo_msgs/srv/ServoCb",
+            "{duration: 0, topic_name: '/optimo/servo/ee_pose_desired', cartesian: true}"
+        ],
+        output="screen"
+    )
+
     return LaunchDescription([
-        Node(
-            package="plato_teleop",
-            executable="spacemouse_twist.py",          # publishes twists from the SpaceMouse
-            name="spacemouse_twist",
-            output="screen",
-        ),
+        # Shutdown handler must be launched first to catch Ctrl+C
+        shutdown_handler_node,
+
+        # Start servo service immediately
+        start_servo_service,
+
+        # Launch nodes after 2 second delay
+        TimerAction(
+            period=2.0,
+            actions=[
+                spacemouse_node,
+                twist_teleop_node
+            ]
+        )
     ])

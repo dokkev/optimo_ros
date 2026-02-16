@@ -51,27 +51,35 @@
             <joint name="${prefix}world_to_stand" type="fixed">
                 <parent link="world" />
                 <child link="${prefix}stand" />
-                <origin xyz="0 0 1" rpy="0 0 -1.57" />
+                <origin xyz="0 0 0" rpy="0 0 0" />
             </joint>
 
             <link name="${prefix}stand">
                 <visual>
                     <origin xyz="0 0 -0.5" rpy="0 0 0" />
                     <geometry>
-                        <box size="0.3 0.3 1" />
+                        <box size="0.5 0.5 1" />
                     </geometry>
                     <material name="white" />
                 </visual>
                 <collision>
                     <origin xyz="0 0 -0.5" rpy="0 0 0" />
                     <geometry>
-                        <box size="0.3 0.3 1" />
+                        <box size="0.5 0.5 1" />
                     </geometry>
                 </collision>
             </link>
 
-            <joint name="${prefix}stand_to_link0" type="fixed">
+            <joint name="${prefix}stand_to_base_link" type="fixed">
                 <parent link="${prefix}stand" />
+                <child link="${prefix}base_link" />
+                <origin xyz="0 0 0" rpy="0 0 0" />
+            </joint>
+
+            <link name="${prefix}base_link"/>
+
+            <joint name="${prefix}base_link_to_link0" type="fixed">
+                <parent link="${prefix}base_link" />
                 <child link="${prefix}link0" />
                 <!-- .27 puts the link on the stand -->
                 <origin xyz="0 0 .27" rpy="0 0 0" />

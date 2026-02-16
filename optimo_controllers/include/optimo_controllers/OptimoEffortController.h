@@ -26,7 +26,6 @@
 #include <controller_interface/controller_interface.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <optimo_msgs/msg/pose_elbow.hpp>
 #include <optimo_msgs/srv/generic_cb.hpp>
 #include <optimo_msgs/srv/moveit_cb.hpp>
@@ -246,18 +245,7 @@ private:
   Eigen::VectorXd measured_torque_;  // [Nm] measured from the effort interface
   std::vector<int> effort_idx_;      // cached indices into state_interfaces_
 
-  // --- New Publisher for End-Effector Pose ---
-  rclcpp::Publisher<optimo_msgs::msg::PoseElbow>::SharedPtr ee_pose_pub_;
-  rclcpp::Publisher<optimo_msgs::msg::PoseElbow>::SharedPtr ee_pose_pub_2;
-  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jacobian_pub_;
-  rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr ext_wrench_pub_;
-
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-  std::vector<double> eef_point;
-
-  // Listener and buffer
-  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 };
 }  // namespace optimo_ros
 

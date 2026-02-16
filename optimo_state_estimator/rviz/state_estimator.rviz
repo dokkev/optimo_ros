@@ -1,0 +1,86 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Name: Tool Properties
+    Expanded:
+      - 2D Pose Estimate
+      - 2D Nav Goal
+    Splitter Ratio: 0.5
+  - Class: rviz_common/Views
+    Name: Views
+    Splitter Ratio: 0.5
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 0.1
+      Plane: XY
+      Color: 160; 160; 160
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Pose Markers
+      Enabled: true
+      Topic:
+        Value: /optimo/optimo_state_estimator/markers
+    - Class: rviz_default_plugins/Pose
+      Name: TF Base->EE
+      Enabled: true
+      Topic:
+        Value: /optimo/optimo_state_estimator/tf_base_to_ee
+      Shape: Axes
+      Axes Length: 0.15
+      Axes Radius: 0.01
+    - Class: rviz_default_plugins/Pose
+      Name: TF Link0->EE
+      Enabled: true
+      Topic:
+        Value: /optimo/optimo_state_estimator/tf_link0_to_ee
+      Shape: Axes
+      Axes Length: 0.15
+      Axes Radius: 0.01
+    - Class: rviz_default_plugins/Pose
+      Name: Model get_ee_pose
+      Enabled: true
+      Topic:
+        Value: /optimo/optimo_state_estimator/model_ee_pose
+      Shape: Axes
+      Axes Length: 0.15
+      Axes Radius: 0.01
+    - Class: rviz_default_plugins/Pose
+      Name: Model get_tcp_pose
+      Enabled: true
+      Topic:
+        Value: /optimo/optimo_state_estimator/model_tcp_pose
+      Shape: Axes
+      Axes Length: 0.15
+      Axes Radius: 0.01
+  Enabled: true
+  Global Options:
+    Background Color: 30; 30; 30
+    Fixed Frame: optimo/base_link
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 1.5
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 0.7
+      Yaw: 0.0
+Window Geometry:
+  Width: 1280
+  Height: 720
+  X: 200
+  Y: 200

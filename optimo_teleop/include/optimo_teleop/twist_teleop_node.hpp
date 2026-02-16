@@ -30,11 +30,9 @@ public:
   virtual ~OptimoTeleop();
 
 private:
-  void current_pose_callback(const optimo_msgs::msg::PoseElbow::SharedPtr msg);
   void twist_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
 
   // Subscribers
-  rclcpp::Subscription<optimo_msgs::msg::PoseElbow>::SharedPtr current_pose_subscriber_;
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr twist_subscriber_;
 
   // Publisher

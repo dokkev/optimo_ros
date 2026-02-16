@@ -2,6 +2,8 @@
 /**/controller_manager:
   ros__parameters:
     update_rate: 1000 # Hz
+    use_realtime_priority: true
+    thread_priority: 90
 
     optimo_effort_controller:
       type: optimo_controllers/OptimoEffortController

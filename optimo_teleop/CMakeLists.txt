@@ -28,29 +28,26 @@ list(APPEND CMAKE_MODULE_PATH ${OPTIMO_API_CMAKE})
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(optimo_api REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(optimo_msgs REQUIRED)
 
-# Build teleop_node executable
-add_executable(teleop_node src/teleop_node.cpp)
-ament_target_dependencies(teleop_node rclcpp std_msgs sensor_msgs optimo_msgs optimo_api)
-target_include_directories(teleop_node PUBLIC
+# Build twist_teleop_node executable
+add_executable(twist_teleop_node src/twist_teleop_node.cpp)
+ament_target_dependencies(twist_teleop_node rclcpp std_msgs sensor_msgs optimo_msgs optimo_api)
+target_include_directories(twist_teleop_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 
-# Build twist_converter executable
-add_executable(twist_converter src/twist_converter.cpp)
-ament_target_dependencies(twist_converter rclcpp std_msgs sensor_msgs optimo_msgs optimo_api)
-target_include_directories(twist_converter PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
+# Build shutdown_handler executable
+add_executable(shutdown_handler src/shutdown_handler.cpp)
+ament_target_dependencies(shutdown_handler rclcpp std_srvs)
 
 install(TARGETS
-  teleop_node
-  twist_converter
+  twist_teleop_node
+  shutdown_handler
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include)
@@ -59,7 +56,7 @@ install(
   DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
-  
+
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
   
