@@ -216,30 +216,36 @@ controller_interface::return_type OptimoEffortController::update(
 //   // Publish the transform
 //   tf_broadcaster_->sendTransform(transform_stamped);
 
-  Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
+  if (!first_run) {
+    Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
 
-  // publish jacobian
-  std_msgs::msg::Float64MultiArray jacobian_msg;
+    // publish jacobian
+    std_msgs::msg::Float64MultiArray jacobian_msg;
 
-  // Specify layout (rows × cols)
-  jacobian_msg.layout.dim.resize(2);
-  jacobian_msg.layout.dim[0].label = "rows";
-  jacobian_msg.layout.dim[0].size = J.rows();
-  jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
-  jacobian_msg.layout.dim[1].label = "cols";
-  jacobian_msg.layout.dim[1].size = J.cols();
-  jacobian_msg.layout.dim[1].stride = J.cols();
+    // Specify layout (rows x cols)
+    jacobian_msg.layout.dim.resize(2);
+    jacobian_msg.layout.dim[0].label = "rows";
+    jacobian_msg.layout.dim[0].size = J.rows();
+    jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
+    jacobian_msg.layout.dim[1].label = "cols";
+    jacobian_msg.layout.dim[1].size = J.cols();
+    jacobian_msg.layout.dim[1].stride = J.cols();
 
-  // Fill row-major data
-  jacobian_msg.data.resize(J.size());
-  for (int r = 0; r < J.rows(); ++r)
-    for (int c = 0; c < J.cols(); ++c)
-      jacobian_msg.data[r * J.cols() + c] = J(r, c);
+    // Fill row-major data
+    jacobian_msg.data.resize(J.size());
+    for (int r = 0; r < J.rows(); ++r)
+      for (int c = 0; c < J.cols(); ++c)
+        jacobian_msg.data[r * J.cols() + c] = J(r, c);
 
-  jacobian_pub_->publish(jacobian_msg);
+    jacobian_pub_->publish(jacobian_msg);
 
-
-  ///////////////////////////////////////////////////
+    // Publish commanded joint torques (milli-Nm) for external computation
+    std_msgs::msg::Float64MultiArray torque_cmd_msg;
+    torque_cmd_msg.data.resize(model->size());
+    for (int i = 0; i < model->size(); ++i)
+      torque_cmd_msg.data[i] = torque_command[i];
+    torque_cmd_pub_->publish(torque_cmd_msg);
+  }
 
   // ------------------------------------------------------------------
 
@@ -398,7 +404,10 @@ CallbackReturn OptimoEffortController::on_init()
       
   ext_wrench_pub_ = get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>(
       "/optimo/external_wrench", 10);
-  
+
+  torque_cmd_pub_ = get_node()->create_publisher<std_msgs::msg::Float64MultiArray>(
+      "/optimo/torque_command", 10);
+
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*get_node());
 
   return CallbackReturn::SUCCESS;

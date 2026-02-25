@@ -265,7 +265,8 @@ private:
   rclcpp::Publisher<optimo_msgs::msg::PoseElbow>::SharedPtr ee_pose_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr jacobian_pub_;
   rclcpp::Publisher<geometry_msgs::msg::WrenchStamped>::SharedPtr ext_wrench_pub_;
-  
+  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr torque_cmd_pub_;
+
 
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   std::vector<double> eef_point;
