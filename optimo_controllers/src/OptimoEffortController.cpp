@@ -216,27 +216,27 @@ controller_interface::return_type OptimoEffortController::update(
 //   // Publish the transform
 //   tf_broadcaster_->sendTransform(transform_stamped);
 
-//   Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
+  Eigen::Matrix<double, 7, 6> J = model->get_jacobian();
 
-//   // publish jacobian
-//   std_msgs::msg::Float64MultiArray jacobian_msg;
+  // publish jacobian
+  std_msgs::msg::Float64MultiArray jacobian_msg;
 
-//   // Specify layout (rows × cols)
-//   jacobian_msg.layout.dim.resize(2);
-//   jacobian_msg.layout.dim[0].label = "rows";
-//   jacobian_msg.layout.dim[0].size = J.rows();
-//   jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
-//   jacobian_msg.layout.dim[1].label = "cols";
-//   jacobian_msg.layout.dim[1].size = J.cols();
-//   jacobian_msg.layout.dim[1].stride = J.cols();
+  // Specify layout (rows × cols)
+  jacobian_msg.layout.dim.resize(2);
+  jacobian_msg.layout.dim[0].label = "rows";
+  jacobian_msg.layout.dim[0].size = J.rows();
+  jacobian_msg.layout.dim[0].stride = J.rows() * J.cols();
+  jacobian_msg.layout.dim[1].label = "cols";
+  jacobian_msg.layout.dim[1].size = J.cols();
+  jacobian_msg.layout.dim[1].stride = J.cols();
 
-//   // Fill row-major data
-//   jacobian_msg.data.resize(J.size());
-//   for (int r = 0; r < J.rows(); ++r)
-//     for (int c = 0; c < J.cols(); ++c)
-//       jacobian_msg.data[r * J.cols() + c] = J(r, c);
+  // Fill row-major data
+  jacobian_msg.data.resize(J.size());
+  for (int r = 0; r < J.rows(); ++r)
+    for (int c = 0; c < J.cols(); ++c)
+      jacobian_msg.data[r * J.cols() + c] = J(r, c);
 
-//   jacobian_pub_->publish(jacobian_msg);
+  jacobian_pub_->publish(jacobian_msg);
 
 
   ///////////////////////////////////////////////////
