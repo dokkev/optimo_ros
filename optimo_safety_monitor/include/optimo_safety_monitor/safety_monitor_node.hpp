@@ -50,6 +50,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr pose_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr status_pub_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr human_pose_safe_pub_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr stop_client_;
   rclcpp::TimerBase::SharedPtr timer_;
 

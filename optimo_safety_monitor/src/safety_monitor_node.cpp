@@ -32,6 +32,7 @@ SafetyMonitorNode::SafetyMonitorNode(const rclcpp::NodeOptions & options)
 
   // Publishers
   status_pub_ = create_publisher<std_msgs::msg::Bool>("~/status", 10);
+  human_pose_safe_pub_ = create_publisher<std_msgs::msg::Bool>("~/human_pose_safe", 10);
 
   // Service client
   stop_client_ = create_client<std_srvs::srv::Trigger>(
@@ -105,6 +106,35 @@ void SafetyMonitorNode::joint_state_callback(
 
 bool SafetyMonitorNode::is_pose_safe()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (!pose_received_) {
+    return true;  // no pose data yet, assume safe
+  }
+
+  // Pose positions are interleaved: [x0,y0,z0, x1,y1,z1, ...]
+  // Landmark indices: 11=left_shoulder, 12=right_shoulder, 15=left_wrist, 16=right_wrist
+  // "higher" in image = smaller y value
+  const auto & pos = latest_pose_.position;
+  if (pos.size() < 17 * 3) {
+    return true;  // not enough landmarks
+  }
+
+  double left_shoulder_y  = pos[11 * 3 + 1];
+  double right_shoulder_y = pos[12 * 3 + 1];
+  double left_wrist_y     = pos[15 * 3 + 1];
+  double right_wrist_y    = pos[16 * 3 + 1];
+
+  // Both wrists above their respective shoulders → UNSAFE
+  bool left_raised  = left_wrist_y < left_shoulder_y;
+  bool right_raised = right_wrist_y < right_shoulder_y;
+
+  if (left_raised && right_raised) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500,
+      "POSE UNSAFE: both hands raised! L_wrist_y=%.0f < L_shoulder_y=%.0f, R_wrist_y=%.0f < R_shoulder_y=%.0f",
+      left_wrist_y, left_shoulder_y, right_wrist_y, right_shoulder_y);
+    return false;
+  }
+
   return true;
 }
 
@@ -273,17 +303,25 @@ BaselineSample SafetyMonitorNode::find_nearest_baseline(const std::vector<double
 
 void SafetyMonitorNode::timer_callback()
 {
-  bool safe = is_pose_safe() && is_wrench_safe();
+  bool pose_safe = is_pose_safe();
+  bool wrench_safe = is_wrench_safe();
+  bool safe = pose_safe && wrench_safe;
   auto stamp = now();
 
   std_msgs::msg::Bool status_msg;
   status_msg.data = safe;
   status_pub_->publish(status_msg);
 
+  std_msgs::msg::Bool pose_status_msg;
+  pose_status_msg.data = pose_safe;
+  human_pose_safe_pub_->publish(pose_status_msg);
+
   RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 2000,
-    "[%.3f] baseline=%s status=%s delta_force=%.2f N",
+    "[%.3f] pose=%s wrench=%s overall=%s delta_force=%.2f N",
     stamp.seconds(),
-    baseline_loaded_ ? "loaded" : "none", safe ? "SAFE" : "UNSAFE",
+    pose_safe ? "SAFE" : "UNSAFE",
+    wrench_safe ? "SAFE" : "UNSAFE",
+    safe ? "SAFE" : "UNSAFE",
     last_delta_force_);
 
   if (!safe && !stop_triggered_) {
