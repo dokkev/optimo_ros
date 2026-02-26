@@ -665,9 +665,15 @@ void OptimoEffortController::play_traj_cb(
   // transfer TrajectoryGoal
   roboligent::TrajectoryGoal goal;
   if (!goal.traj_reader.reset(request->goal.filepath)) {
+    LOG_ERROR(
+      "OptimoEffortController::play_traj_cb: Failed to load trajectory file: "
+      + request->goal.filepath);
     response->success = false;
     return;
   }
+  LOG_INFO(
+    "OptimoEffortController::play_traj_cb: Loaded trajectory - "
+    + goal.traj_reader.to_string());
   if (request->goal.param.imp.impedance != 0)
     goal.param.impedance = request->goal.param.imp.impedance;
   if (request->goal.param.imp.max_force != 0)
