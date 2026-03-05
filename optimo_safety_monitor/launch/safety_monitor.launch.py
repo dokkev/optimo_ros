@@ -30,6 +30,7 @@ def generate_launch_description():
             name="safety_monitor",
             namespace=LaunchConfiguration("ns"),
             output="screen",
+            emulate_tty=True,
             parameters=[{
                 "check_rate_hz": LaunchConfiguration("check_rate_hz"),
                 "wrench_force_threshold": LaunchConfiguration("wrench_force_threshold"),

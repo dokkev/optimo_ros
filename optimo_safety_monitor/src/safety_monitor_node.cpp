@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <limits>
@@ -154,10 +155,17 @@ bool SafetyMonitorNode::is_wrench_safe()
   last_delta_force_ = delta_mag;
 
   if (delta_mag > wrench_force_threshold_) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500,
-      "External force detected: delta=%.2f N (threshold=%.2f) [dx=%.2f dy=%.2f dz=%.2f]",
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500,
+      "WRENCH UNSAFE: delta=%.2f N EXCEEDS threshold=%.2f [dx=%.2f dy=%.2f dz=%.2f]",
       delta_mag, wrench_force_threshold_, dx, dy, dz);
     return false;
+  }
+
+  // Yellow warning when approaching threshold (>70%)
+  if (delta_mag > wrench_force_threshold_ * 0.7) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500,
+      "WRENCH WARNING: delta=%.2f N approaching threshold=%.2f [dx=%.2f dy=%.2f dz=%.2f]",
+      delta_mag, wrench_force_threshold_, dx, dy, dz);
   }
 
   return true;
@@ -189,6 +197,13 @@ void SafetyMonitorNode::record_baseline_cb(
   std::shared_ptr<std_srvs::srv::Trigger::Response> response)
 {
   std::lock_guard<std::mutex> lock(mutex_);
+
+  // Delete old baseline file so stale data is never used
+  if (!baseline_file_.empty() && std::filesystem::exists(baseline_file_)) {
+    std::filesystem::remove(baseline_file_);
+    RCLCPP_INFO(get_logger(), "Deleted old baseline: %s", baseline_file_.c_str());
+  }
+
   baseline_data_.clear();
   recording_ = true;
   baseline_loaded_ = false;
