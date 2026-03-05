@@ -10,6 +10,8 @@ def generate_launch_description():
         DeclareLaunchArgument("check_rate_hz", default_value="50.0"),
         DeclareLaunchArgument("wrench_force_threshold", default_value="10.0"),
         DeclareLaunchArgument("baseline_file", default_value=""),
+        DeclareLaunchArgument("pose_rules_file", default_value=""),
+        DeclareLaunchArgument("pose_angle_margin_deg", default_value="10.0"),
 
         # Usage:
         #   Terminal 1: ros2 launch optimo_bringup optimo.launch.py
@@ -20,9 +22,9 @@ def generate_launch_description():
         #     <play trajectory>
         #     ros2 service call /optimo/safety_monitor/save_baseline std_srvs/srv/Trigger
         #
-        #   Run with baseline:
+        #   Run with pose rules:
         #     ros2 launch optimo_safety_monitor safety_monitor.launch.py \
-        #       baseline_file:=/tmp/optimo_wrench_baseline.csv
+        #       pose_rules_file:=/path/to/pose_rules.yaml pose_angle_margin_deg:=10.0
 
         Node(
             package="optimo_safety_monitor",
@@ -35,6 +37,8 @@ def generate_launch_description():
                 "check_rate_hz": LaunchConfiguration("check_rate_hz"),
                 "wrench_force_threshold": LaunchConfiguration("wrench_force_threshold"),
                 "baseline_file": LaunchConfiguration("baseline_file"),
+                "pose_rules_file": LaunchConfiguration("pose_rules_file"),
+                "pose_angle_margin_deg": LaunchConfiguration("pose_angle_margin_deg"),
             }],
         ),
     ])

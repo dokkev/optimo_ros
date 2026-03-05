@@ -7,15 +7,21 @@
 #include <sstream>
 #include <limits>
 
+#include <yaml-cpp/yaml.h>
+
 SafetyMonitorNode::SafetyMonitorNode(const rclcpp::NodeOptions & options)
 : Node("safety_monitor", options)
 {
   declare_parameter<double>("check_rate_hz", 50.0);
   declare_parameter<double>("wrench_force_threshold", 10.0);
   declare_parameter<std::string>("baseline_file", "");
+  declare_parameter<std::string>("pose_rules_file", "");
+  declare_parameter<double>("pose_angle_margin_deg", 10.0);
 
   wrench_force_threshold_ = get_parameter("wrench_force_threshold").as_double();
   baseline_file_ = get_parameter("baseline_file").as_string();
+  pose_rules_file_ = get_parameter("pose_rules_file").as_string();
+  pose_angle_margin_deg_ = get_parameter("pose_angle_margin_deg").as_double();
   double check_rate_hz = get_parameter("check_rate_hz").as_double();
 
   // Subscribers
@@ -60,6 +66,16 @@ SafetyMonitorNode::SafetyMonitorNode(const rclcpp::NodeOptions & options)
     }
   }
 
+  // Load pose rules if file provided
+  if (!pose_rules_file_.empty()) {
+    if (load_pose_rules(pose_rules_file_)) {
+      RCLCPP_INFO(get_logger(), "Loaded pose rules: %zu joint angles, %zu torso angles (margin=%.1f deg)",
+        joint_angle_rules_.size(), torso_angle_rules_.size(), pose_angle_margin_deg_);
+    } else {
+      RCLCPP_WARN(get_logger(), "Failed to load pose rules from %s", pose_rules_file_.c_str());
+    }
+  }
+
   // Timer
   auto period = std::chrono::duration<double>(1.0 / check_rate_hz);
   timer_ = create_wall_timer(
@@ -67,8 +83,9 @@ SafetyMonitorNode::SafetyMonitorNode(const rclcpp::NodeOptions & options)
     std::bind(&SafetyMonitorNode::timer_callback, this));
 
   RCLCPP_INFO(get_logger(),
-    "Safety monitor started (rate=%.1f Hz, wrench_threshold=%.1f)",
-    check_rate_hz, wrench_force_threshold_);
+    "Safety monitor started (rate=%.1f Hz, wrench_threshold=%.1f, pose_rules=%s)",
+    check_rate_hz, wrench_force_threshold_,
+    pose_rules_loaded_ ? "loaded" : "none");
 }
 
 void SafetyMonitorNode::wrench_callback(
@@ -105,35 +122,104 @@ void SafetyMonitorNode::joint_state_callback(
   joint_state_received_ = true;
 }
 
+// Compute angle (in degrees) at point b, formed by vectors b->a and b->c
+double SafetyMonitorNode::compute_angle(
+  const std::vector<double> & pos, int a, int b, int c)
+{
+  double ax = pos[a * 3], ay = pos[a * 3 + 1], az = pos[a * 3 + 2];
+  double bx = pos[b * 3], by = pos[b * 3 + 1], bz = pos[b * 3 + 2];
+  double cx = pos[c * 3], cy = pos[c * 3 + 1], cz = pos[c * 3 + 2];
+
+  double bax = ax - bx, bay = ay - by, baz = az - bz;
+  double bcx = cx - bx, bcy = cy - by, bcz = cz - bz;
+
+  double dot = bax * bcx + bay * bcy + baz * bcz;
+  double mag_ba = std::sqrt(bax * bax + bay * bay + baz * baz);
+  double mag_bc = std::sqrt(bcx * bcx + bcy * bcy + bcz * bcz);
+
+  if (mag_ba < 1e-9 || mag_bc < 1e-9) {
+    return 0.0;
+  }
+
+  double cos_angle = dot / (mag_ba * mag_bc);
+  cos_angle = std::clamp(cos_angle, -1.0, 1.0);
+  return std::acos(cos_angle) * 180.0 / M_PI;
+}
+
+// Compute angle (in degrees) between two axes: (a1->b1) and (a2->b2)
+double SafetyMonitorNode::compute_axis_angle(
+  const std::vector<double> & pos, int a1, int b1, int a2, int b2)
+{
+  double d1x = pos[b1 * 3] - pos[a1 * 3];
+  double d1y = pos[b1 * 3 + 1] - pos[a1 * 3 + 1];
+  double d1z = pos[b1 * 3 + 2] - pos[a1 * 3 + 2];
+
+  double d2x = pos[b2 * 3] - pos[a2 * 3];
+  double d2y = pos[b2 * 3 + 1] - pos[a2 * 3 + 1];
+  double d2z = pos[b2 * 3 + 2] - pos[a2 * 3 + 2];
+
+  double dot = d1x * d2x + d1y * d2y + d1z * d2z;
+  double mag1 = std::sqrt(d1x * d1x + d1y * d1y + d1z * d1z);
+  double mag2 = std::sqrt(d2x * d2x + d2y * d2y + d2z * d2z);
+
+  if (mag1 < 1e-9 || mag2 < 1e-9) {
+    return 0.0;
+  }
+
+  double cos_angle = dot / (mag1 * mag2);
+  cos_angle = std::clamp(cos_angle, -1.0, 1.0);
+  return std::acos(cos_angle) * 180.0 / M_PI;
+}
+
 bool SafetyMonitorNode::is_pose_safe()
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (!pose_received_) {
-    return true;  // no pose data yet, assume safe
+  if (!pose_received_ || !pose_rules_loaded_) {
+    return true;  // no data or no rules, assume safe
   }
 
-  // Pose positions are interleaved: [x0,y0,z0, x1,y1,z1, ...]
-  // Landmark indices: 11=left_shoulder, 12=right_shoulder, 15=left_wrist, 16=right_wrist
-  // "higher" in image = smaller y value
   const auto & pos = latest_pose_.position;
-  if (pos.size() < 17 * 3) {
-    return true;  // not enough landmarks
+
+  // Check joint angle rules
+  for (const auto & rule : joint_angle_rules_) {
+    // Ensure we have enough landmarks
+    size_t max_idx = std::max({rule.joint_a, rule.joint_b, rule.joint_c});
+    if (pos.size() < (max_idx + 1) * 3) {
+      continue;
+    }
+
+    double angle = compute_angle(pos, rule.joint_a, rule.joint_b, rule.joint_c);
+    double lo = rule.min_deg - pose_angle_margin_deg_;
+    double hi = rule.max_deg + pose_angle_margin_deg_;
+
+    if (angle < lo || angle > hi) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500,
+        "POSE UNSAFE [%s]: angle=%.1f deg outside [%.1f, %.1f] (rule [%.1f, %.1f] + margin %.1f)",
+        rule.name.c_str(), angle, lo, hi,
+        rule.min_deg, rule.max_deg, pose_angle_margin_deg_);
+      return false;
+    }
   }
 
-  double left_shoulder_y  = pos[11 * 3 + 1];
-  double right_shoulder_y = pos[12 * 3 + 1];
-  double left_wrist_y     = pos[15 * 3 + 1];
-  double right_wrist_y    = pos[16 * 3 + 1];
+  // Check torso angle rules
+  for (const auto & rule : torso_angle_rules_) {
+    size_t max_idx = std::max({rule.axis1_a, rule.axis1_b, rule.axis2_a, rule.axis2_b});
+    if (pos.size() < (max_idx + 1) * 3) {
+      continue;
+    }
 
-  // Both wrists above their respective shoulders → UNSAFE
-  bool left_raised  = left_wrist_y < left_shoulder_y;
-  bool right_raised = right_wrist_y < right_shoulder_y;
+    double angle = compute_axis_angle(pos, rule.axis1_a, rule.axis1_b,
+                                           rule.axis2_a, rule.axis2_b);
+    double lo = rule.min_deg - pose_angle_margin_deg_;
+    double hi = rule.max_deg + pose_angle_margin_deg_;
 
-  if (left_raised && right_raised) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500,
-      "POSE UNSAFE: both hands raised! L_wrist_y=%.0f < L_shoulder_y=%.0f, R_wrist_y=%.0f < R_shoulder_y=%.0f",
-      left_wrist_y, left_shoulder_y, right_wrist_y, right_shoulder_y);
-    return false;
+    if (angle < lo || angle > hi) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500,
+        "POSE UNSAFE [%s]: angle=%.1f deg outside [%.1f, %.1f] (rule [%.1f, %.1f] + margin %.1f)",
+        rule.name.c_str(), angle, lo, hi,
+        rule.min_deg, rule.max_deg, pose_angle_margin_deg_);
+      return false;
+    }
   }
 
   return true;
@@ -314,6 +400,65 @@ BaselineSample SafetyMonitorNode::find_nearest_baseline(const std::vector<double
   }
 
   return baseline_data_[min_idx];
+}
+
+bool SafetyMonitorNode::load_pose_rules(const std::string & filepath)
+{
+  try {
+    YAML::Node config = YAML::LoadFile(filepath);
+
+    // Load joint_angles
+    if (config["joint_angles"]) {
+      for (const auto & entry : config["joint_angles"]) {
+        const auto & name = entry.first.as<std::string>();
+        const auto & val = entry.second;
+
+        JointAngleRule rule;
+        rule.name = name;
+        auto joints = val["joints"];
+        rule.joint_a = joints[0].as<int>();
+        rule.joint_b = joints[1].as<int>();
+        rule.joint_c = joints[2].as<int>();
+        rule.min_deg = val["min_deg"].as<double>();
+        rule.max_deg = val["max_deg"].as<double>();
+
+        joint_angle_rules_.push_back(rule);
+        RCLCPP_INFO(get_logger(), "  Rule [%s]: joints(%d,%d,%d) range=[%.1f, %.1f]",
+          name.c_str(), rule.joint_a, rule.joint_b, rule.joint_c,
+          rule.min_deg, rule.max_deg);
+      }
+    }
+
+    // Load torso_angles
+    if (config["torso_angles"]) {
+      for (const auto & entry : config["torso_angles"]) {
+        const auto & name = entry.first.as<std::string>();
+        const auto & val = entry.second;
+
+        TorsoAngleRule rule;
+        rule.name = name;
+        auto joints = val["joints"];
+        // joints is [[a1, b1], [a2, b2]]
+        rule.axis1_a = joints[0][0].as<int>();
+        rule.axis1_b = joints[0][1].as<int>();
+        rule.axis2_a = joints[1][0].as<int>();
+        rule.axis2_b = joints[1][1].as<int>();
+        rule.min_deg = val["min_deg"].as<double>();
+        rule.max_deg = val["max_deg"].as<double>();
+
+        torso_angle_rules_.push_back(rule);
+        RCLCPP_INFO(get_logger(), "  Rule [%s]: axes(%d->%d, %d->%d) range=[%.1f, %.1f]",
+          name.c_str(), rule.axis1_a, rule.axis1_b, rule.axis2_a, rule.axis2_b,
+          rule.min_deg, rule.max_deg);
+      }
+    }
+
+    pose_rules_loaded_ = !joint_angle_rules_.empty() || !torso_angle_rules_.empty();
+    return pose_rules_loaded_;
+  } catch (const YAML::Exception & e) {
+    RCLCPP_ERROR(get_logger(), "Failed to parse pose rules YAML: %s", e.what());
+    return false;
+  }
 }
 
 void SafetyMonitorNode::timer_callback()

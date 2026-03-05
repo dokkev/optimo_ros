@@ -16,6 +16,19 @@ struct BaselineSample {
   double fx, fy, fz;             // force at this configuration
 };
 
+struct JointAngleRule {
+  std::string name;
+  int joint_a, joint_b, joint_c;  // angle measured at joint_b
+  double min_deg, max_deg;
+};
+
+struct TorsoAngleRule {
+  std::string name;
+  int axis1_a, axis1_b;  // first axis (e.g. shoulder line)
+  int axis2_a, axis2_b;  // second axis (e.g. hip line)
+  double min_deg, max_deg;
+};
+
 class SafetyMonitorNode : public rclcpp::Node
 {
 public:
@@ -44,6 +57,12 @@ private:
 
   bool load_baseline(const std::string & filepath);
   BaselineSample find_nearest_baseline(const std::vector<double> & joint_pos);
+
+  // Pose rule methods
+  bool load_pose_rules(const std::string & filepath);
+  static double compute_angle(const std::vector<double> & pos, int a, int b, int c);
+  static double compute_axis_angle(const std::vector<double> & pos,
+    int a1, int b1, int a2, int b2);
 
   // ROS interfaces
   rclcpp::Subscription<geometry_msgs::msg::WrenchStamped>::SharedPtr wrench_sub_;
@@ -75,6 +94,13 @@ private:
   bool baseline_loaded_{false};
   std::vector<BaselineSample> baseline_data_;
   std::string baseline_file_;
+
+  // Pose rule state
+  bool pose_rules_loaded_{false};
+  std::vector<JointAngleRule> joint_angle_rules_;
+  std::vector<TorsoAngleRule> torso_angle_rules_;
+  std::string pose_rules_file_;
+  double pose_angle_margin_deg_{10.0};
 
   // Parameters
   double wrench_force_threshold_;

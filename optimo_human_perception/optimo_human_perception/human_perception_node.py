@@ -156,8 +156,12 @@ class HumanPerceptionNode(Node):
         stamp = self.get_clock().now().to_msg()
 
         if result.pose_landmarks and len(result.pose_landmarks) > 0:
-            landmarks = result.pose_landmarks[0]  # first person
-            self._publish_pose(landmarks, stamp, cv_image.shape)
+            landmarks = result.pose_landmarks[0]  # first person (image coords)
+            # Use world landmarks for 3D pose (meters, hip-centered)
+            world_landmarks = None
+            if result.pose_world_landmarks and len(result.pose_world_landmarks) > 0:
+                world_landmarks = result.pose_world_landmarks[0]
+            self._publish_pose(world_landmarks or landmarks, stamp, cv_image.shape)
             self._publish_annotated(cv_image, result, stamp)
         else:
             # No person detected
@@ -168,34 +172,22 @@ class HumanPerceptionNode(Node):
             self.pose_pub.publish(pose_msg)
 
     def _publish_pose(self, landmarks, stamp, image_shape):
-        """Publish skeleton as JointState with x,y,z positions interleaved."""
-        h, w = image_shape[:2]
+        """Publish skeleton as JointState with x,y,z positions interleaved.
+
+        Expects world landmarks (meters, hip-centered) so that
+        joint-angle computations are camera-rotation invariant.
+        """
         pose_msg = JointState()
         pose_msg.header = Header(stamp=stamp, frame_id='camera_color_optical_frame')
 
         names = []
-        positions = []  # x, y, z interleaved per landmark
+        positions = []  # x, y, z interleaved per landmark (meters)
         velocities = []  # visibility scores
 
         for i, lm in enumerate(landmarks):
             name = POSE_LANDMARK_NAMES[i] if i < len(POSE_LANDMARK_NAMES) else f'landmark_{i}'
             names.append(name)
-
-            # Pixel coordinates (normalized 0-1 -> pixel)
-            px = lm.x * w
-            py = lm.y * h
-
-            # Try to get depth at this pixel
-            z = 0.0
-            if self.latest_depth is not None:
-                ix = int(lm.x * self.latest_depth.shape[1])
-                iy = int(lm.y * self.latest_depth.shape[0])
-                if 0 <= iy < self.latest_depth.shape[0] and 0 <= ix < self.latest_depth.shape[1]:
-                    depth_val = self.latest_depth[iy, ix]
-                    if depth_val > 0:
-                        z = float(depth_val) / 1000.0  # mm -> meters
-
-            positions.extend([px, py, z])
+            positions.extend([lm.x, lm.y, lm.z])
             velocities.append(float(lm.visibility))
 
         pose_msg.name = names

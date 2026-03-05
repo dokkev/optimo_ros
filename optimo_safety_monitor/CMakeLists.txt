@@ -11,10 +11,12 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 add_executable(safety_monitor_node src/safety_monitor_node.cpp)
 ament_target_dependencies(safety_monitor_node
   rclcpp std_msgs std_srvs sensor_msgs geometry_msgs)
+target_link_libraries(safety_monitor_node yaml-cpp)
 target_include_directories(safety_monitor_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
